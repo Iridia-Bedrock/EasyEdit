@@ -1,0 +1,8 @@
+{
+    "name": "iridia-bedrock/easyedit",
+    "autoload": {
+        "psr-4": {
+            "EasyEdit\\": "src/"
+        }
+    }
+}
