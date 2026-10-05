@@ -2,7 +2,7 @@
     "name": "iridia-bedrock/easyedit",
     "autoload": {
         "psr-4": {
-            "platz1de\\EasyEdit\\": "src/"
+            "platz1de\\EasyEdit\\": "src/platz1de/EasyEdit/"
         }
     }
 }
