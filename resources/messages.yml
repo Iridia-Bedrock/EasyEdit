@@ -4,7 +4,7 @@
 
 #If you want to include double quotes (") in your messages please escape them with a backslash (\")
 
-prefix: '&8(&4&lFAWE&8)&7 '
+prefix: '§8(§4§lFAWE§8)§r§7 '
 
 #Args: {x} {y} {z}
 selected-pos1: "First position set to ({x}, {y}, {z})."
@@ -35,8 +35,8 @@ unknown-flag: "Unknown flag: {flag}\nUsage: {usage}"
 command-list: "Commands (showing {start} to {end} of {total}):\n{commands}"
 
 #Args: {message}
-task-crash: "&cAn error occurred while executing the task:\n{message}"
-pattern-invalid: "&cInvalid pattern format:\n{message}"
+task-crash: "§cAn error occurred while executing the task:\n{message}"
+pattern-invalid: "§cInvalid pattern format:\n{message}"
 
 #Args: {time} {changed}
 blocks-set: "Operation completed! {changed} blocks have been changed ({time}s)."
@@ -208,4 +208,4 @@ command-builderrod-description: "Get a builder wand/rod"
 command-builderrod-usage: "//builderrod"
 command-status-description: "Check FAWE queue and thread performance"
 command-status-usage: "//status"
-command-cancel-description: "Cancel your active editing task
+command-cancel-description: "Cancel your active editing task"
