@@ -29,18 +29,21 @@ class ExtendCommand extends EasyEditCommand
 	public function process(Session $session, CommandFlagCollection $flags): void
 	{
 		$selection = $session->getCube();
-		$pos1 = $selection->getPos1();
-		$pos2 = $selection->getPos2();
+		$regions = [];
 
 		if ($flags->hasFlag("vertical")) {
-			$selection->setPos1(new BlockVector($pos1->x, World::Y_MIN, $pos1->z));
-			$selection->setPos2(new BlockVector($pos2->x, World::Y_MAX - 1, $pos2->z));
-			$session->updateSelectionHighlight();
-			return;
+			foreach ($selection->getRegions() as [$pos1, $pos2]) {
+				$regions[] = [new BlockVector($pos1->x, World::Y_MIN, $pos1->z), new BlockVector($pos2->x, World::Y_MAX - 1, $pos2->z)];
+			}
+		} else {
+			$min = $flags->getVectorFlag("min")->diff(OffGridBlockVector::zero());
+			$max = $flags->getVectorFlag("max")->diff(OffGridBlockVector::zero());
+			foreach ($selection->getRegions() as [$pos1, $pos2]) {
+				$regions[] = [$pos1->offset($min), $pos2->offset($max)];
+			}
 		}
 
-		$selection->setPos1($pos1->offset($flags->getVectorFlag("min")->diff(OffGridBlockVector::zero())));
-		$selection->setPos2($pos2->offset($flags->getVectorFlag("max")->diff(OffGridBlockVector::zero())));
+		$selection->setRegions($regions);
 		$session->updateSelectionHighlight();
 	}
 

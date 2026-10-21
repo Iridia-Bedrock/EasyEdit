@@ -6,6 +6,8 @@ use BadMethodCallException;
 use Closure;
 use Generator;
 use platz1de\EasyEdit\math\BlockOffsetVector;
+use platz1de\EasyEdit\math\BlockVector;
+use platz1de\EasyEdit\selection\Cube;
 use platz1de\EasyEdit\selection\constructor\ShapeConstructor;
 use platz1de\EasyEdit\selection\constructor\StackedConstructor;
 use platz1de\EasyEdit\selection\Selection;
@@ -51,27 +53,60 @@ class StackingHelper extends Selection
 	 */
 	public function getNeededChunks(): array
 	{
-		if ($this->axis === Axis::Y) {
-			return $this->parent->getNeededChunks();
-		}
-		//TODO: offset parent to not load chunks that are not needed
-		$size = $this->parent->getSize();
-		$min = $this->parent->getPos1();
-		$max = $this->parent->getPos2();
-		if ($this->amount > 0) {
-			$min = $min->addComponent($this->axis, $size->getComponent($this->axis));
-			$max = $max->addComponent($this->axis, $size->getComponent($this->axis) * $this->amount);
-		} else {
-			$min = $min->addComponent($this->axis, $size->getComponent($this->axis) * $this->amount);
-			$max = $max->addComponent($this->axis, -$size->getComponent($this->axis));
-		}
-		$chunks = [];
-		for ($x = $min->x >> 4; $x <= $max->x >> 4; $x++) {
-			for ($z = $min->z >> 4; $z <= $max->z >> 4; $z++) {
-				$chunks[] = World::chunkHash($x, $z);
+		$regions = $this->getRegions();
+		$chunks = ($this->axis === Axis::Y || count($regions) > 1) ? $this->parent->getNeededChunks() : [];
+		foreach ($this->getDestinationRegions() as [$min, $max]) {
+			for ($x = $min->x >> 4; $x <= $max->x >> 4; $x++) {
+				for ($z = $min->z >> 4; $z <= $max->z >> 4; $z++) {
+					$chunks[] = World::chunkHash($x, $z);
+				}
 			}
 		}
-		return $chunks;
+		return array_values(array_unique($chunks));
+	}
+
+	public function getPos1(): BlockVector
+	{
+		$regions = $this->getDestinationRegions();
+		if ($regions === []) {
+			return parent::getPos1();
+		}
+		$min = $regions[0][0];
+		foreach ($regions as [$start]) {
+			$min = BlockVector::minComponents($min, $start);
+		}
+		return $min;
+	}
+
+	public function getPos2(): BlockVector
+	{
+		$regions = $this->getDestinationRegions();
+		if ($regions === []) {
+			return parent::getPos2();
+		}
+		$max = $regions[0][1];
+		foreach ($regions as [, $end]) {
+			$max = BlockVector::maxComponents($max, $end);
+		}
+		return $max;
+	}
+
+	/** @return array<array{BlockVector, BlockVector}> */
+	private function getDestinationRegions(): array
+	{
+		$destinations = [];
+		foreach ($this->getRegions() as [$start, $end]) {
+			$size = $end->diff($start)->cubicSize();
+			if ($this->amount > 0) {
+				$min = $start->addComponent($this->axis, $size->getComponent($this->axis));
+				$max = $end->addComponent($this->axis, $size->getComponent($this->axis) * $this->amount);
+			} else {
+				$min = $start->addComponent($this->axis, $size->getComponent($this->axis) * $this->amount);
+				$max = $end->addComponent($this->axis, -$size->getComponent($this->axis));
+			}
+			$destinations[] = [BlockVector::minComponents($min, $max), BlockVector::maxComponents($min, $max)];
+		}
+		return $destinations;
 	}
 
 	/**
@@ -81,7 +116,20 @@ class StackingHelper extends Selection
 	 */
 	public function asShapeConstructors(Closure $closure, SelectionContext $context): Generator
 	{
-		yield new StackedConstructor($closure, $this->parent, $context, $this->axis, $this->amount);
+		foreach ($this->getRegions() as [$start, $end]) {
+			$region = new Cube($this->parent->getWorldName(), $start, $end);
+			$size = $region->getSize();
+			$regionClosure = static function (int $x, int $y, int $z) use ($closure, $start, $size): void {
+				$closure($x, $y, $z, $start, $size);
+			};
+			yield new StackedConstructor($regionClosure, $region, $context, $this->axis, $this->amount);
+		}
+	}
+
+	/** @return array<array{BlockVector, BlockVector}> */
+	private function getRegions(): array
+	{
+		return $this->parent instanceof Cube ? $this->parent->getRegions() : [[$this->parent->getPos1(), $this->parent->getPos2()]];
 	}
 
 	/**
@@ -89,7 +137,12 @@ class StackingHelper extends Selection
 	 */
 	public function isCopying(): bool
 	{
-		return $this->axis !== Axis::Y && $this->parent->getSize()->getComponent($this->axis) > ChunkRequestManager::MAX_REQUEST * 8;
+		foreach ($this->getRegions() as [$start, $end]) {
+			if ($this->axis !== Axis::Y && $end->diff($start)->cubicSize()->getComponent($this->axis) > ChunkRequestManager::MAX_REQUEST * 8) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

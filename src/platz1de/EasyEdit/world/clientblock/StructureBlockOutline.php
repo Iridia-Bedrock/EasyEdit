@@ -19,7 +19,7 @@ class StructureBlockOutline extends ClientSideBlock
 	 * @param BlockVector $startPosition
 	 * @param BlockVector $endPosition
 	 */
-	public function __construct(string $world, private BlockVector $startPosition, private BlockVector $endPosition)
+	public function __construct(string $world, private BlockVector $startPosition, private BlockVector $endPosition, private int $anchorIndex = 0)
 	{
 		$this->world = $world;
 		parent::__construct();
@@ -57,12 +57,15 @@ class StructureBlockOutline extends ClientSideBlock
 	{
 		$pos1 = $this->startPosition;
 		$pos2 = $this->endPosition;
+		$anchorX = (($player->getPosition()->getFloorX() >> 4) << 4) + ($this->anchorIndex % 16);
+		$anchorZ = (($player->getPosition()->getFloorZ() >> 4) << 4) + (intdiv($this->anchorIndex, 16) % 16);
+		$anchorY = min(World::Y_MAX - 1, World::Y_MIN + intdiv($this->anchorIndex, 256));
 		$this->block = Registry::OUTLINE_BLOCK();
-		$this->block->position($player->getWorld(), $player->getPosition()->getFloorX(), World::Y_MIN, $player->getPosition()->getFloorZ());
+		$this->block->position($player->getWorld(), $anchorX, $anchorY, $anchorZ);
 		$this->block->getData()
-			->setInt("xStructureOffset", $pos1->x - $player->getPosition()->getFloorX())
-			->setInt("yStructureOffset", $pos1->y - World::Y_MIN)
-			->setInt("zStructureOffset", $pos1->z - $player->getPosition()->getFloorZ())
+			->setInt("xStructureOffset", $pos1->x - $anchorX)
+			->setInt("yStructureOffset", $pos1->y - $anchorY)
+			->setInt("zStructureOffset", $pos1->z - $anchorZ)
 			->setInt("xStructureSize", $pos2->x - $pos1->x + 1)
 			->setInt("yStructureSize", $pos2->y - $pos1->y + 1)
 			->setInt("zStructureSize", $pos2->z - $pos1->z + 1);

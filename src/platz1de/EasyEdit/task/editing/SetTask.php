@@ -45,7 +45,7 @@ class SetTask extends SelectionEditTask
 	public function calculateEffectiveComplexity(): int
 	{
 		//TODO: Add complexity of patterns
-		return $this->getSelection()->getSize()->volume() * 2;
+		return $this->getSelection()->getVolume() * 2;
 	}
 
 	/**

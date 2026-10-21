@@ -1,18 +1,22 @@
 #English language file
 #Author: platz1de (FAWE Style)
 #Last updated at: 2024-03-05
+message-version: "3.0.2"
 
 #If you want to include double quotes (") in your messages please escape them with a backslash (\")
 
 prefix: '§8(§4§lFAWE§8)§r§7 '
 
 #Args: {x} {y} {z}
+#The regions argument on selected-pos2 reports the number of completed areas.
 selected-pos1: "First position set to ({x}, {y}, {z})."
-selected-pos2: "Second position set to ({x}, {y}, {z})."
+selected-pos2: "Second position set to ({x}, {y}, {z}). You now have {regions} selected region(s)."
 
-deselected: "Selection cleared."
+additional-selection-started: "Additional region started at ({x}, {y}, {z}). Right-click a block to finish it."
+wand-given: "§aWooden Axe equipped. §7Left-click: corner 1 · right-click: corner 2 · sneak + left-click: add a region · sneak + drop: clear selection."
+deselected: "All selected regions cleared."
 
-no-selection: "Make a region selection first."
+no-selection: "Select one or more regions first."
 no-clipboard: "Your clipboard is empty. Copy something first."
 
 #Args: {given} {expected}
@@ -76,50 +80,50 @@ unknown-schematic: "Unknown schematic \"{schematic}\".\nKnown schematics: {known
 #Commands
 #Note: If command usages contains a short description, it should be spilt with a "-" (e.g. "help - Show this help")
 
-command-pos1-description: "Set the first selection point"
+command-pos1-description: "Set the first corner of the current region"
 command-pos1-usage: "//pos1 [x] [y] [z]"
-command-pos2-description: "Set the second selection point"
+command-pos2-description: "Set the second corner of the current region"
 command-pos2-usage: "//pos2 [x] [y] [z]"
-command-deselect-description: "Clear the current selection"
+command-deselect-description: "Clear all selected regions"
 command-deselect-usage: "//deselect"
-command-extend-description: "Extend the selected area"
+command-extend-description: "Extend every selected region"
 command-extend-usage:
   - "//extend [direction] [count]"
-  - "//extend [count] - Extend the selected area into your looking direction"
-  - "//extend vertical - Fully extend the selected Area vertically"
-  - "//extend --min <x>,<y>,<z> --max <x>,<y>,<z> - Modify the selected area by the given vectors"
-command-set-description: "Set all blocks in the selection"
+  - "//extend [count] - Extend every selected region into your looking direction"
+  - "//extend vertical - Fully extend every selected region vertically"
+  - "//extend --min <x>,<y>,<z> --max <x>,<y>,<z> - Modify every selected region by the given vectors"
+command-set-description: "Set blocks in every selected region"
 command-set-usage: "//set <pattern>"
-command-replace-description: "Replace blocks in the selection"
+command-replace-description: "Replace blocks in every selected region"
 command-replace-usage:
   - "//replace <block> <pattern>"
-  - "//replace <pattern> - Replace all solid blocks in the selected area"
-command-overlay-description: "Overlay the top layer of the selection"
+  - "//replace <pattern> - Replace all solid blocks in every selected region"
+command-overlay-description: "Overlay the top layer of every selected region"
 command-overlay-usage: "//overlay <pattern>"
-command-naturalize-description: "Naturalize the selection (dirt, grass, stone)"
+command-naturalize-description: "Naturalize every selected region (dirt, grass, stone)"
 command-naturalize-usage: "//naturalize [pattern] [pattern] [pattern]"
-command-smooth-description: "Smooth the elevation in the selection"
+command-smooth-description: "Smooth the elevation in every selected region"
 command-smooth-usage: "//smooth"
-command-center-description: "Set the center block(s) of the selection"
+command-center-description: "Set the center block(s) of every selected region"
 command-center-usage: "//center [pattern]"
-command-walls-description: "Build walls around the selection"
+command-walls-description: "Build walls around every selected region"
 command-walls-usage: "//walls [pattern]"
-command-sides-description: "Build the sides of the selection"
+command-sides-description: "Build the sides of every selected region"
 command-sides-usage: "//sides [pattern]"
-command-move-description: "Move the selection"
+command-move-description: "Move every selected region"
 command-move-usage:
   - "//move [direction] [count]"
-  - "//move [count] - Move the selected area into your looking direction"
-  - "//move -v <x>,<y>,<z> - Move the selected area by the given vector"
-command-stack-description: "Repeat/stack the selection"
+  - "//move [count] - Move every selected region into your looking direction"
+  - "//move -v <x>,<y>,<z> - Move every selected region by the given vector"
+command-stack-description: "Repeat/stack every selected region"
 command-stack-usage:
   - "//stack [direction] [count]"
-  - "//stack [count] - Stack the selected area into your looking direction"
-command-istack-description: "Stack the selection without overwriting existing blocks"
+  - "//stack [count] - Stack every selected region into your looking direction"
+command-istack-description: "Stack every selected region without overwriting existing blocks"
 command-istack-usage:
   - "//istack [direction] [count]"
-  - "//istack [count] - Stack the selected area into your looking direction"
-command-count-description: "Count the number of blocks in the selection"
+  - "//istack [count] - Stack every selected region into your looking direction"
+command-count-description: "Count blocks in every selected region"
 command-count-usage:
   - "//count"
   - "//count -d - Count blocks and show detailed block state information"
@@ -128,7 +132,7 @@ command-extinguish-description: "Extinguish fires nearby"
 command-extinguish-usage:
   - "//extinguish"
   - "//extinguish [radius] - Extinguish fire in the area around you"
-command-view-description: "Show boundaries of your selection"
+command-view-description: "Show boundaries of every selected region"
 command-view-usage: "//view"
 
 command-undo-description: "Undo recent changes"
@@ -140,14 +144,14 @@ command-redo-usage:
   - "//redo [count]"
   - "//redo <target> [count] - Redo the latest change of the target"
 
-command-copy-description: "Copy selection to clipboard"
+command-copy-description: "Copy all selected regions to the clipboard"
 command-copy-usage:
   - "//copy - Copy relative to the player"
-  - "//copy -c - Copy relative to center of the selection"
-command-cut-description: "Cut selection to clipboard"
+  - "//copy -c - Copy relative to the center of all selected regions"
+command-cut-description: "Cut all selected regions to the clipboard"
 command-cut-usage:
   - "//cut - Cut relative to the player"
-  - "//cut -c - Cut relative to center of the selection"
+  - "//cut -c - Cut relative to the center of all selected regions"
 command-paste-description: "Paste clipboard contents"
 command-paste-usage: "//paste"
 command-insert-description: "Insert clipboard contents"
@@ -175,7 +179,7 @@ command-cylinder-description: "Generate a solid cylinder"
 command-cylinder-usage: "//cylinder <radius> <height> <pattern>"
 command-hcylinder-description: "Generate a hollow cylinder"
 command-hcylinder-usage: "//hcylinder <radius> <height> <pattern> [thickness]"
-command-noise-description: "Generate terrain using noise"
+command-noise-description: "Generate terrain using noise in every selected region"
 command-noise-usage: "//noise"
 command-cube-description: "Generate a solid cube"
 command-cube-usage: "//cube <size> <pattern>"
@@ -206,6 +210,8 @@ command-blockinfo-description: "Inspect block data on click"
 command-blockinfo-usage: "//blockinfo"
 command-builderrod-description: "Get a builder wand/rod"
 command-builderrod-usage: "//builderrod"
+command-wand-description: "Get the selection wand"
+command-wand-usage: "//wand - In creative, left-click the first corner and right-click the second; sneak + left-click adds another region"
 command-status-description: "Check FAWE queue and thread performance"
 command-status-usage: "//status"
 command-cancel-description: "Cancel your active editing task"

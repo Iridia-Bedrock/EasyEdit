@@ -9,6 +9,7 @@ use platz1de\EasyEdit\command\flags\CommandFlagCollection;
 use platz1de\EasyEdit\command\KnownPermissions;
 use platz1de\EasyEdit\session\Session;
 use pocketmine\item\VanillaItems;
+use pocketmine\nbt\tag\CompoundTag;
 
 class WandCommand extends EasyEditCommand
 {
@@ -23,7 +24,11 @@ class WandCommand extends EasyEditCommand
 	 */
 	public function process(Session $session, CommandFlagCollection $flags): void
 	{
-		$session->asPlayer()->getInventory()->setItem($session->asPlayer()->getInventory()->getHeldItemIndex(), VanillaItems::WOODEN_AXE()); //some people prefer a command I guess
+		$player = $session->asPlayer();
+		// FAWE's default wand is a plain wooden axe; mark ours so sneak + drop is safe.
+		$item = VanillaItems::WOODEN_AXE()->setNamedTag(CompoundTag::create()->setByte("isEasyEditWand", 1));
+		$player->getInventory()->setItem($player->getInventory()->getHeldItemIndex(), $item);
+		$session->sendMessage("wand-given");
 	}
 
 	/**

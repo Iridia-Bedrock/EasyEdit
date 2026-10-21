@@ -62,7 +62,7 @@ class CountTask extends ExecutableTask implements ChunkedTask
 
 	public function calculateEffectiveComplexity(): int
 	{
-		return $this->selection->asSelection()->getSize()->volume();
+		return $this->selection->asSelection()->getVolume();
 	}
 
 	public function canExecuteOnMainThread(): bool
