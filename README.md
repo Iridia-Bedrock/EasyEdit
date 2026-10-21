@@ -35,7 +35,7 @@ Selection:
 | //pos1 [x] [y] [z]                                | Set the first position                                       | easyedit.select | //1<br>left click a block in creative with a wooden axe                         |
 | //pos2 [x] [y] [z]                                | Set the second position                                      | easyedit.select | //2<br>break a block in creative with a wooden axe                              |
 | //hpos1<br>//hpos2                                 | Set a position at the block you're looking at                | easyedit.select |                                                                                 |
-| //sel [cuboid\|extend\|sphere\|ellipsoid\|cylinder\|poly] | Change the selection shape                            | easyedit.select | //selection                                                                     |
+| //sel [cuboid\|extend\|sphere\|ellipsoid\|cylinder\|poly\|convex] | Change the selection shape                     | easyedit.select | //selection                                                                     |
 | //chunk [-s] [coordinates]                         | Select the current chunk, chunks in a selection, or a target chunk | easyedit.select | -c uses chunk coordinates                                                       |
 | //extend [direction] [count]<br>//extend vertical | Extend every selected region                                | easyedit.select | Look into the direction you want to extend to                                  |
 | //shift <amount> [direction]                       | Move every selected region                                  | easyedit.select |                                                                                 |

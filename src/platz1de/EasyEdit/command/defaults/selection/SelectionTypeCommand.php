@@ -12,7 +12,7 @@ use platz1de\EasyEdit\session\Session;
 
 class SelectionTypeCommand extends EasyEditCommand
 {
-	private const TYPES = ["cuboid", "extend", "sphere", "ellipsoid", "cylinder", "poly"];
+	private const TYPES = ["cuboid", "extend", "sphere", "ellipsoid", "cylinder", "poly", "convex"];
 
 	public function __construct()
 	{

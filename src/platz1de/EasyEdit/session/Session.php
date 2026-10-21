@@ -14,6 +14,7 @@ use platz1de\EasyEdit\result\TaskResult;
 use platz1de\EasyEdit\result\TaskResultPromise;
 use platz1de\EasyEdit\selection\Cube;
 use platz1de\EasyEdit\selection\Cylinder;
+use platz1de\EasyEdit\selection\ConvexPolyhedron;
 use platz1de\EasyEdit\selection\Ellipsoid;
 use platz1de\EasyEdit\selection\Polygon;
 use platz1de\EasyEdit\selection\identifier\BlockListSelectionIdentifier;
@@ -294,9 +295,14 @@ class Session
 	{
 		$this->createSelectionInWorld($position->getWorld()->getFolderName());
 		$vector = BlockVector::fromVector($position);
-		if ($this->selectionType === "poly") {
-			if ($number === 1 || !($this->selection instanceof Polygon)) $this->selection = new Polygon($position->getWorld()->getFolderName());
-			$this->selection->setPos($vector, $number);
+		if ($this->selectionType === "poly" || $this->selectionType === "convex") {
+			if ($this->selectionType === "convex") {
+				if ($number === 1 || !($this->selection instanceof ConvexPolyhedron)) $this->selection = new ConvexPolyhedron($position->getWorld()->getFolderName());
+				$this->selection->setPos($vector, $number);
+			} else {
+				if ($number === 1 || !($this->selection instanceof Polygon)) $this->selection = new Polygon($position->getWorld()->getFolderName());
+				$this->selection->setPos($vector, $number);
+			}
 		} elseif ($this->selectionType === "extend") {
 			if ($number === 1) $this->selectionAnchor = clone $vector;
 			$this->selectionAnchor ??= clone $vector;
@@ -313,9 +319,9 @@ class Session
 		$this->updateSelectionHighlight();
 
 		$arguments = ["{x}" => (string) $position->getFloorX(), "{y}" => (string) $position->getFloorY(), "{z}" => (string) $position->getFloorZ()];
-		if ($this->selectionType === "poly" && $number === 2 && $this->selection instanceof Polygon) {
+		if ($number === 2 && (($this->selectionType === "poly" && $this->selection instanceof Polygon) || ($this->selectionType === "convex" && $this->selection instanceof ConvexPolyhedron))) {
 			$arguments["{points}"] = (string) count($this->selection->getVertices());
-			$this->sendMessage("polygon-point-added", $arguments);
+			$this->sendMessage("selection-point-added", $arguments);
 		} elseif ($number === 2) {
 			$arguments["{regions}"] = (string) ($this->selection instanceof Cube ? count($this->selection->getRegions()) : 1);
 			$this->sendMessage("selected-pos$number", $arguments);
@@ -356,6 +362,7 @@ class Session
 			"ellipsoid" => new Ellipsoid($world, $point, max(0.5, abs($dx)), max(0.5, abs($dy)), max(0.5, abs($dz))),
 			"cylinder" => new Cylinder($world, new OffGridBlockVector($first->x, min($first->y, $second->y), $first->z), sqrt($dx * $dx + $dz * $dz), abs($dy) + 1),
 			"poly" => new Polygon($world),
+			"convex" => new ConvexPolyhedron($world),
 			default => new Cube($world, $first, $second)
 		};
 	}

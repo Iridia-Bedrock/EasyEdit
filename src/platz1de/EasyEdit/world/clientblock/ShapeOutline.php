@@ -3,6 +3,7 @@
 namespace platz1de\EasyEdit\world\clientblock;
 
 use platz1de\EasyEdit\selection\Cylinder;
+use platz1de\EasyEdit\selection\ConvexPolyhedron;
 use platz1de\EasyEdit\selection\Ellipsoid;
 use platz1de\EasyEdit\selection\Polygon;
 use platz1de\EasyEdit\selection\Selection;
@@ -55,6 +56,10 @@ class ShapeOutline extends ClientSideBlock
 			$this->buildPolygonPoints($selection, $sampleEvery);
 			return;
 		}
+		if ($selection instanceof ConvexPolyhedron) {
+			$this->buildConvexPoints($selection, $sampleEvery);
+			return;
+		}
 		if (!$selection instanceof Sphere && !$selection instanceof Cylinder) return;
 
 		$count = 0;
@@ -93,6 +98,22 @@ class ShapeOutline extends ClientSideBlock
 			for ($y = $minY; $y <= $maxY; ++$y) {
 				if (($visited++ % $sampleEvery) !== 0) continue;
 				$this->points[$a->x . ":" . $y . ":" . $a->z] = new Vector3($a->x, $y, $a->z);
+			}
+		}
+	}
+
+	private function buildConvexPoints(ConvexPolyhedron $selection, int $sampleEvery): void
+	{
+		$visited = 0;
+		foreach ($selection->getHullEdges() as [$a, $b]) {
+			$steps = max(1, max(abs($b->x - $a->x), abs($b->y - $a->y), abs($b->z - $a->z)));
+			for ($step = 0; $step <= $steps; ++$step) {
+				if (($visited++ % $sampleEvery) !== 0) continue;
+				$t = $step / $steps;
+				$x = (int) round($a->x + ($b->x - $a->x) * $t);
+				$y = (int) round($a->y + ($b->y - $a->y) * $t);
+				$z = (int) round($a->z + ($b->z - $a->z) * $t);
+				$this->points["$x:$y:$z"] = new Vector3($x, $y, $z);
 			}
 		}
 	}

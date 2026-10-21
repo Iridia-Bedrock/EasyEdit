@@ -26,6 +26,7 @@ class Polygon extends Selection
 			$this->vertices = [clone $pos];
 		} else {
 			if ($this->vertices === []) $this->vertices[] = clone $pos;
+			if (count($this->vertices) >= 20) return;
 			$last = $this->vertices[array_key_last($this->vertices)];
 			if ($last->x !== $pos->x || $last->y !== $pos->y || $last->z !== $pos->z) $this->vertices[] = clone $pos;
 		}
@@ -74,10 +75,14 @@ class Polygon extends Selection
 	public function getVolume(): int
 	{
 		if (!$this->isValid()) return 0;
-		$volume = 0;
-		$constructor = new PolygonConstructor(static function (int $x, int $y, int $z) use (&$volume): void { ++$volume; }, $this->vertices, $this->getPos1()->y, $this->getPos2()->y, SelectionContext::full());
-		foreach ($this->getNeededChunks() as $chunk) $constructor->moveTo($chunk);
-		return $volume;
+		$doubleArea = 0;
+		$count = count($this->vertices);
+		for ($i = 0; $i < $count; ++$i) {
+			$a = $this->vertices[$i];
+			$b = $this->vertices[($i + 1) % $count];
+			$doubleArea += $a->x * $b->z - $b->x * $a->z;
+		}
+		return (int) ceil(abs($doubleArea) / 2 * ($this->getPos2()->y - $this->getPos1()->y + 1));
 	}
 
 	public function getNeededChunks(): array
