@@ -5,7 +5,7 @@ config-version: "3.0.1" #Please don't change this manually
 #Lowering this might cause some unintended behavior on mobile devices
 tool-cooldown: 0.05
 
-#Whether to allow user with "easyedit.history.other" permission to undo/redo other people's actions
+#Whether to allow user with "fawe.history.other" permission to undo/redo other people's actions
 allow-history-other: true
 
 #Remaps usages of 3 or more slashes to 2 slashes, allowing usage of minecraft autocomplete

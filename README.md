@@ -7,7 +7,7 @@ This repository is a **PocketMine-MP fork of [EasyEdit](https://github.com/platz
 - **Multiple cuboid regions:** use the selection axe to mark corners. Sneak and left-click to start another region, then right-click to finish it. Editing and selection commands apply to all selected regions.
 - **Non-cuboid selections:** `//sel poly` and `//sel convex` provide polygon and convex selections with matching outlines.
 - **Quick clear:** sneak and drop the selection axe, or run `//unselect`, to clear the selection.
-- **Existing installs:** the plugin is now named `FastAsyncWorldEdit`.
+- **Permissions:** nodes use the `fawe.*` prefix. Existing EasyEdit permissions and data are not migrated.
 
 ## Use and installation
 
@@ -17,5 +17,4 @@ The plugin requires PocketMine-MP API 5. The selection wand is obtained with `//
 
 ## Project links
 
-- [EasyEdit upstream](https://github.com/platz1de/EasyEdit)
-- [This fork](https://github.com/Iridia-Bedrock/EasyEdit)
+- [EasyEdit](https://github.com/platz1de/EasyEdit)

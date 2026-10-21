@@ -1,45 +1,45 @@
 name: FastAsyncWorldEdit
-main: platz1de\EasyEdit\EasyEdit
+main: platz1de\FastAsyncWorldEdit\FastAsyncWorldEdit
 api: 5.12.0
 version: 3.1.0
 author: platz1de
 permissions:
-  easyedit.info:
+  fawe.info:
     default: true
     description: "Allows the user to see information about the plugin"
-  easyedit.edit:
+  fawe.edit:
     default: op
     description: "Allows the user to edit blocks"
-  easyedit.generate:
+  fawe.generate:
     default: op
     description: "Allows the user to generate blocks"
-  easyedit.history:
+  fawe.history:
     default: op
     description: "Allows the user to use the edit history"
-  easyedit.history.other:
+  fawe.history.other:
     default: op
     description: "Allows the user to use the edit history of other people"
-  easyedit.clipboard:
+  fawe.clipboard:
     default: op
     description: "Allows the user to use the clipboard"
-  easyedit.readdisk:
+  fawe.readdisk:
     default: op
     description: "Allows the user to load schematics from disk"
-  easyedit.writedisk:
+  fawe.writedisk:
     default: op
     description: "Allows the user to load schematics from disk"
-  easyedit.manage:
+  fawe.manage:
     default: op
     description: "Allows the user to manage plugin internals"
-  easyedit.select:
+  fawe.select:
     default: op
     description: "Allows the user to select positions"
-  easyedit.brush:
+  fawe.brush:
     default: op
     description: "Allows the user to use brushes"
-  easyedit.rod:
+  fawe.rod:
     default: op
     description: "Allows the user to use the builder rod"
-  easyedit.util:
+  fawe.util:
     default: op
     description: "Allows the user to use utility tools"

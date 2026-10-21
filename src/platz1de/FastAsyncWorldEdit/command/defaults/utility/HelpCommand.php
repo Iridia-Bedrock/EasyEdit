@@ -1,0 +1,62 @@
+<?php
+
+namespace platz1de\FastAsyncWorldEdit\command\defaults\utility;
+
+use platz1de\FastAsyncWorldEdit\command\CommandManager;
+use platz1de\FastAsyncWorldEdit\command\FAWECommand;
+use platz1de\FastAsyncWorldEdit\command\FlagArgumentParser;
+use platz1de\FastAsyncWorldEdit\command\flags\CommandFlag;
+use platz1de\FastAsyncWorldEdit\command\flags\CommandFlagCollection;
+use platz1de\FastAsyncWorldEdit\command\flags\IntegerCommandFlag;
+use platz1de\FastAsyncWorldEdit\command\KnownPermissions;
+use platz1de\FastAsyncWorldEdit\session\Session;
+use pocketmine\lang\Translatable;
+use UnexpectedValueException;
+
+class HelpCommand extends FAWECommand
+{
+	use FlagArgumentParser;
+
+	private const COMMANDS_PER_PAGE = 8;
+
+	public function __construct()
+	{
+		parent::__construct("/commands", [KnownPermissions::PERMISSION_INFO], ["/h", "/cmd"]);
+		$this->flagOrder = ["page" => false];
+	}
+
+	/**
+	 * @param Session               $session
+	 * @param CommandFlagCollection $flags
+	 */
+	public function process(Session $session, CommandFlagCollection $flags): void
+	{
+		$commands = [];
+		foreach (CommandManager::getCommands() as $command) {
+			$usage = $command->getUsage();
+			if ($usage instanceof Translatable) {
+				throw new UnexpectedValueException("FAWE commands shouldn't contain translatable data");
+			}
+			foreach (explode(PHP_EOL, $usage) as $help) {
+				$commands[] = $help;
+			}
+		}
+		$page = max(1, $flags->getIntFlag("page"));
+		if (($page - 1) * self::COMMANDS_PER_PAGE >= count($commands)) {
+			$page = (int) ceil(count($commands) / self::COMMANDS_PER_PAGE);
+		}
+		$show = array_slice($commands, ($page - 1) * self::COMMANDS_PER_PAGE, self::COMMANDS_PER_PAGE);
+		$session->sendMessage("command-list", ["{commands}" => implode("\n", $show), "{start}" => (string) (($page - 1) * self::COMMANDS_PER_PAGE + 1), "{end}" => (string) (($page - 1) * self::COMMANDS_PER_PAGE + count($show)), "{total}" => (string) count($commands)]);
+	}
+
+	/**
+	 * @param Session $session
+	 * @return CommandFlag[]
+	 */
+	public function getKnownFlags(Session $session): array
+	{
+		return [
+			"page" => IntegerCommandFlag::default(1, "page", [], "p")
+		];
+	}
+}

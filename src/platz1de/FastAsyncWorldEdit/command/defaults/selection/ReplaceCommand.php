@@ -1,0 +1,53 @@
+<?php
+
+namespace platz1de\FastAsyncWorldEdit\command\defaults\selection;
+
+use Generator;
+use platz1de\FastAsyncWorldEdit\command\exception\InvalidUsageException;
+use platz1de\FastAsyncWorldEdit\command\flags\BlockCommandFlag;
+use platz1de\FastAsyncWorldEdit\command\flags\CommandFlagCollection;
+use platz1de\FastAsyncWorldEdit\command\flags\PatternCommandFlag;
+use platz1de\FastAsyncWorldEdit\pattern\block\MaskedBlockGroup;
+use platz1de\FastAsyncWorldEdit\pattern\logic\relation\BlockPattern;
+use platz1de\FastAsyncWorldEdit\pattern\Pattern;
+use platz1de\FastAsyncWorldEdit\session\Session;
+use platz1de\FastAsyncWorldEdit\world\HeightMapCache;
+
+class ReplaceCommand extends AliasedPatternCommand
+{
+	public function __construct()
+	{
+		parent::__construct("/replace");
+	}
+
+	/**
+	 * @param Session               $session
+	 * @param CommandFlagCollection $flags
+	 * @return Pattern
+	 */
+	public function parsePattern(Session $session, CommandFlagCollection $flags): Pattern
+	{
+		return new BlockPattern($flags->getBlockFlag("block"), [$flags->getPatternFlag("pattern")]);
+	}
+
+	public function getKnownFlags(Session $session): array
+	{
+		return [
+			"block" => new BlockCommandFlag("block", [], "b"),
+			"pattern" => new PatternCommandFlag("pattern", [], "p"),
+		];
+	}
+
+	public function parseArguments(CommandFlagCollection $flags, Session $session, array $args): Generator
+	{
+		if (count($args) >= 2) {
+			yield (new BlockCommandFlag("block"))->parseArgument($session, $args[0]);
+			array_shift($args);
+		} elseif (count($args) === 1) {
+			yield BlockCommandFlag::with(MaskedBlockGroup::inverted(HeightMapCache::getIgnore()), "block");
+		} else {
+			throw new InvalidUsageException();
+		}
+		yield (new PatternCommandFlag("pattern"))->parseArgument($session, $args[0]);
+	}
+}

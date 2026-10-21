@@ -2,7 +2,7 @@
     "name": "iridia-bedrock/fastasyncworldedit",
     "autoload": {
         "psr-4": {
-            "platz1de\\EasyEdit\\": "src/platz1de/EasyEdit/"
+            "platz1de\\FastAsyncWorldEdit\\": "src/platz1de/FastAsyncWorldEdit/"
         }
     },
     "require-dev": {
