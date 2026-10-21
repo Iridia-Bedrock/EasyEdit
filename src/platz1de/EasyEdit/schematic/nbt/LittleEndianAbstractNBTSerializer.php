@@ -2,58 +2,42 @@
 
 namespace platz1de\EasyEdit\schematic\nbt;
 
-use pocketmine\nbt\LittleEndianNbtSerializer;
-use pocketmine\nbt\NBT;
-use pocketmine\nbt\NbtDataException;
-use pocketmine\nbt\ReaderTracker;
-use pocketmine\nbt\TreeRoot;
-use pocketmine\utils\BinaryDataException;
+use pocketmine\utils\Binary;
 
-class LittleEndianAbstractNBTSerializer extends LittleEndianNbtSerializer implements AbstractNBTSerializer
+class LittleEndianAbstractNBTSerializer extends BaseAbstractNBTSerializer
 {
-	/**
-	 * @var CompressedFileStream
-	 */
-	protected $buffer;
-
-	/**
-	 * @throws BinaryDataException
-	 * @throws NbtDataException
-	 */
-	public function readFile(string $file): TreeRoot
+	public function readShort(): int
 	{
-		$this->buffer = new CompressedFileStream($file);
-		$type = $this->readByte();
-		if ($type === NBT::TAG_End) {
-			throw new NbtDataException("Found TAG_End at the start of buffer");
-		}
-
-		$rootName = $this->readString();
-		return new TreeRoot(AbstractNBT::createTag($type, $this, new ReaderTracker(0)), $rootName);
+		return Binary::readLShort($this->buffer->get(2));
 	}
 
-	public function readChunk(int $count): string
+	public function readSignedShort(): int
 	{
-		return $this->buffer->get($count);
+		return Binary::readSignedLShort($this->buffer->get(2));
 	}
 
-	public function skip(int $count): void
+	public function readInt(): int
 	{
-		$this->buffer->setOffset($this->buffer->getOffset() + $count);
+		return Binary::readLInt($this->buffer->get(4));
 	}
 
-	public function close(): void
+	public function readLong(): int
 	{
-		$this->buffer->close();
+		return Binary::readLLong($this->buffer->get(8));
 	}
 
-	public function __clone(): void
+	public function readFloat(): float
 	{
-		$this->buffer = clone $this->buffer;
+		return Binary::readLFloat($this->buffer->get(4));
 	}
 
-	public function optimizeHighFrequencyAccess(): void
+	public function readDouble(): float
 	{
-		$this->buffer->optimizeHighFrequencyAccess();
+		return Binary::readLDouble($this->buffer->get(8));
+	}
+
+	protected function getIntArrayFormat(): string
+	{
+		return "V*";
 	}
 }

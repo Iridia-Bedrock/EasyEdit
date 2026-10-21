@@ -4,5 +4,15 @@
         "psr-4": {
             "platz1de\\EasyEdit\\": "src/platz1de/EasyEdit/"
         }
-    }
+    },
+    "require-dev": {
+        "axolotl-pm/pocketmine-mp": "dev-stable"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Iridia-Bedrock/axolotl-pm",
+            "no-api": true
+        }
+    ]
 }

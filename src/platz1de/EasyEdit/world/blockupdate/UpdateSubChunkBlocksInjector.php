@@ -3,11 +3,12 @@
 namespace platz1de\EasyEdit\world\blockupdate;
 
 use BadMethodCallException;
+use pmmp\encoding\ByteBufferReader;
+use pmmp\encoding\ByteBufferWriter;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\PacketHandlerInterface;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 
 /**
  * We inject our pre-generated packet data directly into the network sending to not require creation of (way too many) packet entries
@@ -30,14 +31,14 @@ class UpdateSubChunkBlocksInjector extends DataPacket implements ClientboundPack
 		return $result;
 	}
 
-	protected function decodePayload(PacketSerializer $in): void
+	protected function decodePayload(ByteBufferReader $in): void
 	{
 		throw new BadMethodCallException("Injectors should never be decoded");
 	}
 
-	protected function encodePayload(PacketSerializer $out): void
+	protected function encodePayload(ByteBufferWriter $out): void
 	{
-		$out->put($this->rawData);
+		$out->writeByteArray($this->rawData);
 	}
 
 	public function handle(PacketHandlerInterface $handler): bool
