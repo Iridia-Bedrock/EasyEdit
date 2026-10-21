@@ -20,6 +20,7 @@ use platz1de\EasyEdit\command\defaults\movement\UnstuckCommand;
 use platz1de\EasyEdit\command\defaults\movement\UpCommand;
 use platz1de\EasyEdit\command\defaults\selection\AliasedContextCommand;
 use platz1de\EasyEdit\command\defaults\selection\CountCommand;
+use platz1de\EasyEdit\command\defaults\selection\ChunkCommand;
 use platz1de\EasyEdit\command\defaults\selection\DeselectCommand;
 use platz1de\EasyEdit\command\defaults\selection\ExtendCommand;
 use platz1de\EasyEdit\command\defaults\selection\ExtinguishCommand;
@@ -30,6 +31,8 @@ use platz1de\EasyEdit\command\defaults\selection\OverlayCommand;
 use platz1de\EasyEdit\command\defaults\selection\ReplaceCommand;
 use platz1de\EasyEdit\command\defaults\selection\SetCommand;
 use platz1de\EasyEdit\command\defaults\selection\SmoothCommand;
+use platz1de\EasyEdit\command\defaults\selection\SelectionAdjustmentCommand;
+use platz1de\EasyEdit\command\defaults\selection\SelectionTypeCommand;
 use platz1de\EasyEdit\command\defaults\selection\StackCommand;
 use platz1de\EasyEdit\command\defaults\selection\ViewCommand;
 use platz1de\EasyEdit\command\defaults\utility\BenchmarkCommand;
@@ -89,8 +92,17 @@ class EasyEdit extends PluginBase
 			//Selection
 			new GenericPositionCommand(1),
 			new GenericPositionCommand(2),
+			new GenericPositionCommand(1, true),
+			new GenericPositionCommand(2, true),
 			new DeselectCommand(),
+			new SelectionTypeCommand(),
+			new ChunkCommand(),
 			new ExtendCommand(),
+			new SelectionAdjustmentCommand("shift"),
+			new SelectionAdjustmentCommand("expand"),
+			new SelectionAdjustmentCommand("contract"),
+			new SelectionAdjustmentCommand("inset"),
+			new SelectionAdjustmentCommand("outset"),
 			new SetCommand(),
 			new ReplaceCommand(),
 			new OverlayCommand(),

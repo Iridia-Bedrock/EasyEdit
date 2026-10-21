@@ -15,6 +15,16 @@ class Cube extends Selection
 {
 	use CubicChunkLoader;
 
+	/** @param callable(BlockVector, BlockVector): array{BlockVector, BlockVector} $modifier */
+	public function modifyRegions(callable $modifier): void
+	{
+		$regions = [];
+		foreach ($this->getRegions() as [$start, $end]) {
+			$regions[] = $modifier(clone $start, clone $end);
+		}
+		$this->setRegions($regions);
+	}
+
 	/** @var array<array{BlockVector, ?BlockVector}> */
 	private array $additionalRegions = [];
 
@@ -85,6 +95,7 @@ class Cube extends Selection
 	public function setRegions(array $regions): void
 	{
 		if ($regions === []) {
+			unset($this->pos1, $this->pos2, $this->selected1, $this->selected2);
 			$this->additionalRegions = [];
 			return;
 		}
@@ -99,9 +110,52 @@ class Cube extends Selection
 
 	public function getVolume(): int
 	{
+		$regions = $this->getRegions();
+		$xEdges = [];
+		foreach ($regions as [$min, $max]) {
+			$xEdges[] = $min->x;
+			$xEdges[] = $max->x + 1;
+		}
+		$xEdges = array_values(array_unique($xEdges));
+		sort($xEdges);
 		$volume = 0;
-		foreach ($this->getRegions() as [$start, $end]) {
-			$volume += $end->diff($start)->cubicSize()->volume();
+		for ($i = 0; $i < count($xEdges) - 1; ++$i) {
+			$x = $xEdges[$i];
+			$widthX = $xEdges[$i + 1] - $x;
+			$active = array_values(array_filter($regions, static fn(array $region) => $region[0]->x <= $x && $region[1]->x >= $x));
+			$yEdges = [];
+			foreach ($active as [$min, $max]) {
+				$yEdges[] = $min->y;
+				$yEdges[] = $max->y + 1;
+			}
+			$yEdges = array_values(array_unique($yEdges));
+			sort($yEdges);
+			for ($j = 0; $j < count($yEdges) - 1; ++$j) {
+				$y = $yEdges[$j];
+				$widthY = $yEdges[$j + 1] - $y;
+				$intervals = [];
+				foreach ($active as [$min, $max]) {
+					if ($min->y <= $y && $max->y >= $y) $intervals[] = [$min->z, $max->z + 1];
+				}
+				sort($intervals);
+				$coveredZ = 0;
+				$intervalStart = null;
+				$intervalEnd = null;
+				foreach ($intervals as [$startZ, $endZ]) {
+					if ($intervalStart === null) {
+						$intervalStart = $startZ;
+						$intervalEnd = $endZ;
+					} elseif ($startZ <= $intervalEnd) {
+						$intervalEnd = max($intervalEnd, $endZ);
+					} else {
+						$coveredZ += $intervalEnd - $intervalStart;
+						$intervalStart = $startZ;
+						$intervalEnd = $endZ;
+					}
+				}
+				if ($intervalStart !== null) $coveredZ += $intervalEnd - $intervalStart;
+				$volume += $widthX * $widthY * $coveredZ;
+			}
 		}
 		return $volume;
 	}

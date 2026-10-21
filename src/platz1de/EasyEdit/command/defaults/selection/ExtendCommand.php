@@ -19,7 +19,7 @@ class ExtendCommand extends EasyEditCommand
 {
 	public function __construct()
 	{
-		parent::__construct("/extend", [KnownPermissions::PERMISSION_SELECT], ["/expand"]);
+		parent::__construct("/extend", [KnownPermissions::PERMISSION_SELECT]);
 	}
 
 	/**

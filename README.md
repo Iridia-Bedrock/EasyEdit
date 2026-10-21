@@ -33,9 +33,15 @@ Selection:
 | Command                                           | Description                                                  | Permission      | Aliases/Notice                                                                  |
 |---------------------------------------------------|--------------------------------------------------------------|-----------------|---------------------------------------------------------------------------------|
 | //pos1 [x] [y] [z]                                | Set the first position                                       | easyedit.select | //1<br>left click a block in creative with a wooden axe                         |
-| //pos2 [x] [y] [z]                                | Set the first position                                       | easyedit.select | //2<br>break a block in creative with a wooden axe                              |
-| //extend [direction] [count]<br>//extend vertical | Extend the selected area                                     | easyedit.select | //expand<br>Look into the direction you want to extend to                       |
-| //extend --min <x>,<y>,<z> --max <x>,<y>,<z>      | Modify the selected area by the given vectors                | easyedit.select | "Min" and "Max" refer to the corners of the selection                           |
+| //pos2 [x] [y] [z]                                | Set the second position                                      | easyedit.select | //2<br>break a block in creative with a wooden axe                              |
+| //hpos1<br>//hpos2                                 | Set a position at the block you're looking at                | easyedit.select |                                                                                 |
+| //sel [cuboid\|extend\|sphere\|ellipsoid\|cylinder\|poly] | Change the selection shape                            | easyedit.select | //selection                                                                     |
+| //chunk [-s] [coordinates]                         | Select the current chunk, chunks in a selection, or a target chunk | easyedit.select | -c uses chunk coordinates                                                       |
+| //extend [direction] [count]<br>//extend vertical | Extend every selected region                                | easyedit.select | Look into the direction you want to extend to                                  |
+| //shift <amount> [direction]                       | Move every selected region                                  | easyedit.select |                                                                                 |
+| //expand / //contract                              | Expand or contract every selected region                     | easyedit.select | Supports vertical expansion                                                     |
+| //inset / //outset                                 | Contract or expand every selected region on all sides       | easyedit.select | -h horizontal, -v vertical                                                       |
+| //extend --min <x>,<y>,<z> --max <x>,<y>,<z>      | Modify every selected region by the given vectors            | easyedit.select | "Min" and "Max" refer to the corners of each region                           |
 | //set \<pattern>                                  | Set blocks in the selected area                              | easyedit.edit   |
 | //replace \<block> \<pattern>                     | Replace blocks in the selected area                          | easyedit.edit   |
 | //replace \<pattern>                              | Replace all solid blocks in the selected area                | easyedit.edit   |
