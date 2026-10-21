@@ -59,7 +59,7 @@ class MovingChunkHandler extends GroupedChunkHandler
 				if ($c === $chunk) {
 					continue;
 				}
-				if (isset($this->last) && in_array($c, $this->groupRequest[$this->last], true)) {
+				if (isset($this->last, $this->groupRequest[$this->last][$c])) {
 					$this->connections[$c] = $chunk;
 					continue;
 				}

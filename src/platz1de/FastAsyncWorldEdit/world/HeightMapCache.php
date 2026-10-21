@@ -18,7 +18,9 @@ class HeightMapCache
 	/**
 	 * @var int[] these mess up the height calculation in different ways
 	 */
-	private static array $ignore;
+	private static array $ignore = [];
+	/** @var array<int, true> */
+	private static array $ignoreLookup = [];
 
 	private static bool $loaded = false;
 	/**
@@ -67,13 +69,9 @@ class HeightMapCache
 				for ($z = $min->z; $z <= $max->z; $z++) {
 					$y = World::Y_MAX - 1;
 					while ($y > World::Y_MIN) {
-						while ($y >= World::Y_MIN && in_array($iterator->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS, self::$ignore, true)) {
-							$y--;
-						}
+						while ($y >= World::Y_MIN && self::isIgnored($iterator->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS)) $y--;
 						$c = $y;
-						while ($y >= World::Y_MIN && !in_array($iterator->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS, self::$ignore, true)) {
-							$y--;
-						}
+						while ($y >= World::Y_MIN && !self::isIgnored($iterator->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS)) $y--;
 						self::$heightMap[$x][$z][$c] = $c - $y;
 						self::$reverseHeightMap[$x][$z][$y + 1] = $c - $y;
 					}
@@ -253,6 +251,7 @@ class HeightMapCache
 	public static function loadIgnore(array $ignore): void
 	{
 		self::$ignore = [];
+		self::$ignoreLookup = [];
 		try {
 			foreach ($ignore as $block) {
 				try {
@@ -260,14 +259,24 @@ class HeightMapCache
 					if ($tag instanceof BlockGroup) {
 						throw new UnexpectedValueException("Masked block groups are not supported for terrain-ignored-blocks");
 					}
-					self::$ignore = array_merge(self::$ignore, $tag->getIds());
+					foreach ($tag->getIds() as $id) {
+						if (!isset(self::$ignoreLookup[$id])) {
+							self::$ignore[] = $id;
+							self::$ignoreLookup[$id] = true;
+						}
+					}
 				} catch (UnsupportedBlockStateException) {
-					self::$ignore[] = BlockParser::getRuntime($block) >> Block::INTERNAL_STATE_DATA_BITS;
+					$id = BlockParser::getRuntime($block) >> Block::INTERNAL_STATE_DATA_BITS;
+					if (!isset(self::$ignoreLookup[$id])) {
+						self::$ignore[] = $id;
+						self::$ignoreLookup[$id] = true;
+					}
 				}
 			}
 		} catch (UnsupportedBlockStateException) {
 			FastAsyncWorldEdit::getInstance()->getLogger()->error("Failed to load terrain-ignored-blocks, ignoring only air");
 			self::$ignore = [BlockTypeIds::AIR];
+			self::$ignoreLookup = [BlockTypeIds::AIR => true];
 		}
 	}
 
@@ -277,6 +286,17 @@ class HeightMapCache
 	public static function getIgnore(): array
 	{
 		return self::$ignore;
+	}
+
+	public static function isIgnored(int $blockId): bool
+	{
+		return isset(self::$ignoreLookup[$blockId]);
+	}
+
+	/** @return array<int, true> */
+	public static function getIgnoreLookup(): array
+	{
+		return self::$ignoreLookup;
 	}
 
 	private static function moveTo(int $x, int $z): void

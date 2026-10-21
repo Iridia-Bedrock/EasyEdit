@@ -11,6 +11,7 @@ use platz1de\FastAsyncWorldEdit\utils\ConfigManager;
 use platz1de\FastAsyncWorldEdit\utils\ExtendedBinaryStream;
 use platz1de\FastAsyncWorldEdit\world\HeightMapCache;
 use pocketmine\block\Block;
+use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\world\World;
 use SplPriorityQueue;
@@ -35,10 +36,8 @@ class FillTask extends ExpandingTask
 	 */
 	public function executeEdit(EditTaskHandler $handler, ManagedChunkHandler $loader): void
 	{
-		$ignore = HeightMapCache::getIgnore();
-		if (($k = array_search($this->block->getTypeId(), $ignore, true)) !== false) {
-			unset($ignore[$k]);
-		}
+		$ignore = HeightMapCache::getIgnoreLookup();
+		unset($ignore[$this->block->getTypeId()]);
 
 		$queue = new SplPriorityQueue();
 		$scheduled = [];
@@ -46,26 +45,13 @@ class FillTask extends ExpandingTask
 		$startX = $this->start->x;
 		$startY = $this->start->y;
 		$startZ = $this->start->z;
-		$validate = match ($this->direction) {
-			Facing::DOWN => static function (BlockVector $pos) use ($startY) {
-				return $pos->y <= $startY;
-			},
-			Facing::UP => static function (BlockVector $pos) use ($startY) {
-				return $pos->y >= $startY;
-			},
-			Facing::NORTH => static function (BlockVector $pos) use ($startZ) {
-				return $pos->z <= $startZ;
-			},
-			Facing::SOUTH => static function (BlockVector $pos) use ($startZ) {
-				return $pos->z >= $startZ;
-			},
-			Facing::WEST => static function (BlockVector $pos) use ($startX) {
-				return $pos->x <= $startX;
-			},
-			Facing::EAST => static function (BlockVector $pos) use ($startX) {
-				return $pos->x >= $startX;
-			},
-			default => throw new BadMethodCallException("Invalid direction")
+		if (!isset(Facing::OFFSET[$this->direction])) throw new BadMethodCallException("Invalid direction");
+		$directionAxis = Facing::axis($this->direction);
+		$directionPositive = Facing::isPositive($this->direction);
+		$startCoordinate = match ($directionAxis) {
+			Axis::X => $startX,
+			Axis::Y => $startY,
+			Axis::Z => $startZ,
 		};
 		$limit = ConfigManager::getFillDistance();
 
@@ -81,16 +67,25 @@ class FillTask extends ExpandingTask
 			$chunk = World::chunkHash($x >> 4, $z >> 4);
 			$this->updateProgress(-$current["priority"], $limit);
 			$loader->checkRuntimeChunk($chunk);
-			if (!in_array($handler->getResultingBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS, $ignore, true)) {
+			if (!isset($ignore[$handler->getResultingBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS])) {
 				$loader->checkUnload($handler, $chunk);
 				continue;
 			}
 			$handler->changeBlock($x, $y, $z, $id);
 			foreach (Facing::ALL as $facing) {
-				$side = (new BlockVector($x, $y, $z))->getSide($facing);
-				if ($validate($side) && !isset($scheduled[$hash = $side->getBlockHash()])) {
+				[$offsetX, $offsetY, $offsetZ] = Facing::OFFSET[$facing];
+				$sideX = $x + $offsetX;
+				$sideY = min(World::Y_MAX - 1, max(World::Y_MIN, $y + $offsetY));
+				$sideZ = $z + $offsetZ;
+				$sideCoordinate = match ($directionAxis) {
+					Axis::X => $sideX,
+					Axis::Y => $sideY,
+					Axis::Z => $sideZ,
+				};
+				$valid = $directionPositive ? $sideCoordinate >= $startCoordinate : $sideCoordinate <= $startCoordinate;
+				if ($valid && !isset($scheduled[$hash = World::blockHash($sideX, $sideY, $sideZ)])) {
 					$scheduled[$hash] = true;
-					$loader->registerRequestedChunks($side->getChunkHash());
+					$loader->registerRequestedChunks(World::chunkHash($sideX >> 4, $sideZ >> 4));
 					$queue->insert($hash, $facing === Facing::DOWN || $facing === Facing::UP ? $current["priority"] : $current["priority"] - 1);
 				}
 			}

@@ -96,6 +96,7 @@ class MixedUtils
 	 */
 	public static function positiveModulo(int $a, int $b): int
 	{
-		return ($a % $b + $b) % $b;
+		$remainder = $a % $b;
+		return $b > 0 && $remainder < 0 ? $remainder + $b : ($b < 0 && $remainder > 0 ? $remainder + $b : $remainder);
 	}
 }

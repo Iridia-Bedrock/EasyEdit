@@ -13,6 +13,8 @@ use pocketmine\block\Block;
 class MaskedBlockGroup extends BlockType
 {
 	private bool $invert = false;
+	/** @var array<int, true> */
+	private array $idLookup = [];
 
 	/**
 	 * @param int[] $ids
@@ -20,6 +22,7 @@ class MaskedBlockGroup extends BlockType
 	public function __construct(private array $ids)
 	{
 		parent::__construct();
+		$this->rebuildIdLookup();
 	}
 
 	/**
@@ -35,7 +38,7 @@ class MaskedBlockGroup extends BlockType
 
 	public function equals(int $fullBlock): bool
 	{
-		return in_array($fullBlock >> Block::INTERNAL_STATE_DATA_BITS, $this->ids, true) !== $this->invert;
+		return isset($this->idLookup[$fullBlock >> Block::INTERNAL_STATE_DATA_BITS]) !== $this->invert;
 	}
 
 	/**
@@ -75,6 +78,7 @@ class MaskedBlockGroup extends BlockType
 			$this->ids[] = $stream->getInt();
 		}
 		$this->invert = $stream->getBool();
+		$this->rebuildIdLookup();
 	}
 
 	/**
@@ -83,5 +87,10 @@ class MaskedBlockGroup extends BlockType
 	public function getIds(): array
 	{
 		return $this->ids;
+	}
+
+	private function rebuildIdLookup(): void
+	{
+		$this->idLookup = array_fill_keys($this->ids, true);
 	}
 }

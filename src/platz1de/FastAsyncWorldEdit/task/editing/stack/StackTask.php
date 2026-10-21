@@ -15,6 +15,7 @@ use platz1de\FastAsyncWorldEdit\task\editing\GroupedChunkHandler;
 use platz1de\FastAsyncWorldEdit\task\editing\SelectionEditTask;
 use platz1de\FastAsyncWorldEdit\task\editing\SingleChunkHandler;
 use platz1de\FastAsyncWorldEdit\utils\ExtendedBinaryStream;
+use platz1de\FastAsyncWorldEdit\utils\MixedUtils;
 use platz1de\FastAsyncWorldEdit\world\HeightMapCache;
 use pocketmine\block\Block;
 use pocketmine\math\Axis;
@@ -75,12 +76,16 @@ class StackTask extends SelectionEditTask
 		$startY = $start->y;
 		$startZ = $start->z;
 		if ($this->insert) {
-			$ignore = HeightMapCache::getIgnore();
+			$ignore = HeightMapCache::getIgnoreLookup();
 			yield from $this->getSelection()->asShapeConstructors(function (int $x, int $y, int $z, ?BlockVector $regionStart = null, ?BlockOffsetVector $regionSize = null) use ($ignore, $handler, $sizeX, $sizeY, $sizeZ, $startX, $startY, $startZ): void {
 				$regionStart ??= new BlockVector($startX, $startY, $startZ);
 				$regionSize ??= new BlockOffsetVector($sizeX, $sizeY, $sizeZ);
-				$block = $handler->getBlock($regionStart->x + (($x - $regionStart->x) % $regionSize->x + $regionSize->x) % $regionSize->x, $regionStart->y + (($y - $regionStart->y) % $regionSize->y + $regionSize->y) % $regionSize->y, $regionStart->z + (($z - $regionStart->z) % $regionSize->z + $regionSize->z) % $regionSize->z);
-				if ($block !== 0 && in_array($handler->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS, $ignore, true)) {
+				$block = $handler->getBlock(
+					$regionStart->x + MixedUtils::positiveModulo($x - $regionStart->x, $regionSize->x),
+					$regionStart->y + MixedUtils::positiveModulo($y - $regionStart->y, $regionSize->y),
+					$regionStart->z + MixedUtils::positiveModulo($z - $regionStart->z, $regionSize->z)
+				);
+				if ($block !== 0 && isset($ignore[$handler->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS])) {
 					$handler->changeBlock($x, $y, $z, $block);
 				}
 			}, $this->context);
@@ -88,7 +93,14 @@ class StackTask extends SelectionEditTask
 			yield from $this->getSelection()->asShapeConstructors(function (int $x, int $y, int $z, ?BlockVector $regionStart = null, ?BlockOffsetVector $regionSize = null) use ($handler, $sizeX, $sizeY, $sizeZ, $startX, $startY, $startZ): void {
 				$regionStart ??= new BlockVector($startX, $startY, $startZ);
 				$regionSize ??= new BlockOffsetVector($sizeX, $sizeY, $sizeZ);
-				$handler->copyBlock($x, $y, $z, $regionStart->x + (($x - $regionStart->x) % $regionSize->x + $regionSize->x) % $regionSize->x, $regionStart->y + (($y - $regionStart->y) % $regionSize->y + $regionSize->y) % $regionSize->y, $regionStart->z + (($z - $regionStart->z) % $regionSize->z + $regionSize->z) % $regionSize->z);
+				$handler->copyBlock(
+					$x,
+					$y,
+					$z,
+					$regionStart->x + MixedUtils::positiveModulo($x - $regionStart->x, $regionSize->x),
+					$regionStart->y + MixedUtils::positiveModulo($y - $regionStart->y, $regionSize->y),
+					$regionStart->z + MixedUtils::positiveModulo($z - $regionStart->z, $regionSize->z)
+				);
 			}, $this->context);
 		}
 	}
