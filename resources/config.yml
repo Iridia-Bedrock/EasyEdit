@@ -1,22 +1,9 @@
 config-version: "3.0.1" #Please don't change this manually
 
-#Used language
-#Available:
-# auto - Detect from pocketmine
-# eng - English
-# deu - German
-# idn - Indonesian
-# jpn - Japanese
-# rus - Russian
-# spa - Spanish
-# vie - Vietnamese
-# custom - Allows to modify the language file directly
-language: auto
-
 #Tool cooldown length in seconds (defaults to a fifth of a second)
 #Used for brushes, selection axes and more
 #Lowering this might cause some unintended behavior on mobile devices
-tool-cooldown: 0.2
+tool-cooldown: 0.05
 
 #Whether to allow user with "easyedit.history.other" permission to undo/redo other people's actions
 allow-history-other: true
@@ -26,7 +13,7 @@ allow-history-other: true
 remap-commands: true
 
 #Distance to check while filling; default: 100
-fill-distance: 100
+fill-distance: 250
 
 #Max blocks checked when pathfinding, default: 1000000 (1M)
 pathfinding-max: 1000000

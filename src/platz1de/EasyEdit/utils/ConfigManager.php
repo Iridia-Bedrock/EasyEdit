@@ -40,8 +40,7 @@ class ConfigManager
 	public static function load(): void
 	{
 		$config = self::loadConfig();
-
-		Messages::load(strtolower(self::mustGetString($config, "language", "auto")));
+		Messages::load();
 
 		self::$terrainIgnored = self::mustGetStringArray($config, "terrain-ignored-blocks", []);
 
