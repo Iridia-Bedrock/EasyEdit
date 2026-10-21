@@ -41,7 +41,8 @@ class Session
 	private SplStack $future;
 	private StoredSelectionIdentifier $clipboard;
 	private Selection $selection;
-	private int $highlight = -1;
+	/** @var int[] */
+	private array $highlights = [];
 
 	public function __construct(private SessionIdentifier $id)
 	{
@@ -237,8 +238,15 @@ class Session
 	/**
 	 * @param Position $position
 	 */
-	public function selectPos1(Position $position): void
+	public function selectPos1(Position $position, bool $add = false): void
 	{
+		$this->createSelectionInWorld($position->getWorld()->getFolderName());
+		if ($add && $this->selection instanceof Cube && $this->selection->isValid()) {
+			$this->selection->startAdditionalRegion(BlockVector::fromVector($position));
+			$this->updateSelectionHighlight();
+			$this->sendMessage("additional-selection-started", ["{x}" => (string) $position->getFloorX(), "{y}" => (string) $position->getFloorY(), "{z}" => (string) $position->getFloorZ()]);
+			return;
+		}
 		$this->selectPos($position, 1);
 	}
 
@@ -260,7 +268,11 @@ class Session
 		$this->selection->setPos(BlockVector::fromVector($position), $number);
 		$this->updateSelectionHighlight();
 
-		$this->sendMessage("selected-pos$number", ["{x}" => (string) $position->getFloorX(), "{y}" => (string) $position->getFloorY(), "{z}" => (string) $position->getFloorZ()]);
+		$arguments = ["{x}" => (string) $position->getFloorX(), "{y}" => (string) $position->getFloorY(), "{z}" => (string) $position->getFloorZ()];
+		if ($number === 2 && $this->selection instanceof Cube) {
+			$arguments["{regions}"] = (string) count($this->selection->getRegions());
+		}
+		$this->sendMessage("selected-pos$number", $arguments);
 	}
 
 	public function deselect(): void
@@ -285,13 +297,16 @@ class Session
 
 	public function updateSelectionHighlight(): void
 	{
-		if ($this->highlight !== -1) {
-			ClientSideBlockManager::unregisterBlock($this->getPlayer(), $this->highlight);
+		foreach ($this->highlights as $highlight) {
+			ClientSideBlockManager::unregisterBlock($this->getPlayer(), $highlight);
 		}
-		$this->highlight = -1;
+		$this->highlights = [];
 
 		if (isset($this->selection) && $this->selection->isValid()) {
-			$this->highlight = ClientSideBlockManager::registerBlock($this->getPlayer(), new StructureBlockOutline($this->selection->getWorldName(), $this->selection->getPos1(), $this->selection->getPos2()));
+			$regions = $this->selection instanceof Cube ? $this->selection->getRegions(true) : [[$this->selection->getPos1(), $this->selection->getPos2()]];
+			foreach ($regions as $index => [$pos1, $pos2]) {
+				$this->highlights[] = ClientSideBlockManager::registerBlock($this->getPlayer(), new StructureBlockOutline($this->selection->getWorldName(), $pos1, $pos2, $index));
+			}
 		}
 	}
 

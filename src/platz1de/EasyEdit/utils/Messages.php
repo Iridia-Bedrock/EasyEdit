@@ -7,12 +7,13 @@ use platz1de\EasyEdit\thread\input\MessageInputData;
 use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\utils\Config;
+use pocketmine\utils\ConfigLoadException;
 use pocketmine\utils\TextFormat;
 use UnexpectedValueException;
 
 class Messages
 {
-	private const MESSAGE_VERSION = "3.0.1";
+	private const MESSAGE_VERSION = "3.0.2";
 
 	/**
 	 * @var string[]
@@ -22,7 +23,15 @@ class Messages
 	public static function load(): void
 	{
         EasyEdit::getInstance()->saveResource("messages.yml");
-        $custom = new Config(EasyEdit::getInstance()->getDataFolder() . "messages.yml", Config::YAML);
+        $path = EasyEdit::getInstance()->getDataFolder() . "messages.yml";
+        try {
+            $custom = new Config($path, Config::YAML);
+        } catch (ConfigLoadException $exception) {
+            copy($path, $path . ".old");
+            EasyEdit::getInstance()->saveResource("messages.yml", true);
+            $custom = new Config($path, Config::YAML);
+            EasyEdit::getInstance()->getLogger()->warning("Your invalid messages.yml was backed up as messages.yml.old and replaced with the default messages");
+        }
 
         $current = $custom->get("message-version", "1.0");
         if (!is_string($current)) {

@@ -6,6 +6,7 @@ use Generator;
 use platz1de\EasyEdit\EasyEdit;
 use platz1de\EasyEdit\result\EditTaskResult;
 use platz1de\EasyEdit\selection\constructor\ShapeConstructor;
+use platz1de\EasyEdit\selection\Cube;
 use platz1de\EasyEdit\selection\identifier\SelectionIdentifier;
 use platz1de\EasyEdit\selection\identifier\SelectionSerializer;
 use platz1de\EasyEdit\selection\identifier\StoredSelectionIdentifier;
@@ -57,13 +58,21 @@ class SmoothTask extends ExecutableTask
 		$chunkHandler = new FullChunkHandler($selection->getWorldName());
 		EasyEdit::getEnv()->initChunkHandler($chunkHandler);
 
-		$min = $selection->getPos1()->add(-1, 0, -1);
-		$max = $selection->getPos2()->add(1, 0, 1);
-
-		for ($x = $min->x >> 4; $x <= $max->x >> 4; $x++) {
-			for ($z = $min->z >> 4; $z <= $max->z >> 4; $z++) {
-				$chunkHandler->request(World::chunkHash($x, $z));
+		$regions = $selection instanceof Cube ? $selection->getRegions() : [[$selection->getPos1(), $selection->getPos2()]];
+		$heightRanges = [];
+		$chunks = [];
+		foreach ($regions as [$start, $end]) {
+			$min = $start->add(-1, 0, -1);
+			$max = $end->add(1, 0, 1);
+			$heightRanges[] = [$min, $max];
+			for ($x = $min->x >> 4; $x <= $max->x >> 4; $x++) {
+				for ($z = $min->z >> 4; $z <= $max->z >> 4; $z++) {
+					$chunks[World::chunkHash($x, $z)] = true;
+				}
 			}
+		}
+		foreach (array_keys($chunks) as $chunk) {
+			$chunkHandler->request($chunk);
 		}
 
 		while (!$chunkHandler->isDone()) {
@@ -77,7 +86,9 @@ class SmoothTask extends ExecutableTask
 			$editHandler->setChunk($index, $chunk);
 		}
 		HeightMapCache::prepare();
-		HeightMapCache::loadBetween($editHandler->getOrigin(), $min, $max);
+		foreach ($heightRanges as [$min, $max]) {
+			HeightMapCache::loadBetween($editHandler->getOrigin(), $min, $max);
+		}
 
 		$constructors = iterator_to_array($this->prepareConstructors($editHandler));
 		foreach ($chunkHandler->getChunkIndexes() as $chunk) {

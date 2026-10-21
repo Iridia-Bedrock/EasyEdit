@@ -29,7 +29,7 @@ class MoveTask extends SelectionEditTask
 
 	public function calculateEffectiveComplexity(): int
 	{
-		return $this->getSelection()->getSize()->volume() * 2;
+		return $this->getSelection()->getVolume() * 2;
 	}
 
 	/**

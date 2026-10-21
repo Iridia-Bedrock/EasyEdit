@@ -4,6 +4,7 @@ namespace platz1de\EasyEdit\task\editing;
 
 use Generator;
 use platz1de\EasyEdit\selection\constructor\ShapeConstructor;
+use platz1de\EasyEdit\selection\Cube;
 use platz1de\EasyEdit\selection\Selection;
 use platz1de\EasyEdit\task\editing\cubic\CubicStaticUndo;
 use platz1de\EasyEdit\task\EditThreadExclusive;
@@ -50,6 +51,18 @@ class Noise3DTask extends SelectionEditTask
 			$this->noise = new Simplex(new Random(time()), $this->octaves, $this->persistence, $this->expansion);
 		}
 		$selection = $this->getSelection();
+		if ($selection instanceof Cube) {
+			foreach ($selection->getRegions() as [$start, $end]) {
+				$region = new Cube($selection->getWorldName(), $start, $end);
+				yield from $this->prepareRegionConstructors($region, $handler);
+			}
+			return;
+		}
+		yield from $this->prepareRegionConstructors($selection, $handler);
+	}
+
+	private function prepareRegionConstructors(Selection $selection, EditTaskHandler $handler): Generator
+	{
 		$size = $selection->getSize();
 		$noise = $this->noise->getFastNoise3D($size->x - 1, $size->y - 1, $size->z - 1, 1, 1, 1, $selection->getPos1()->x, $selection->getPos1()->y, $selection->getPos1()->z);
 		$stone = VanillaBlocks::STONE()->getStateId();

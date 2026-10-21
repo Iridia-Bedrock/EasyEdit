@@ -4,8 +4,10 @@ namespace platz1de\EasyEdit\task\editing\stack;
 
 use Generator;
 use platz1de\EasyEdit\math\BlockOffsetVector;
+use platz1de\EasyEdit\math\BlockVector;
 use platz1de\EasyEdit\result\EditTaskResult;
 use platz1de\EasyEdit\selection\constructor\ShapeConstructor;
+use platz1de\EasyEdit\selection\Cube;
 use platz1de\EasyEdit\selection\Selection;
 use platz1de\EasyEdit\task\editing\cubic\CubicStaticUndo;
 use platz1de\EasyEdit\task\editing\EditTaskHandler;
@@ -38,7 +40,8 @@ class StackTask extends SelectionEditTask
 
 	public function calculateEffectiveComplexity(): int
 	{
-		return $this->getSelection()->getSize()->volume() * $this->direction->cubicVolume();
+		$this->getSelection(); // initialize the original selection
+		return $this->original->getVolume() * $this->direction->cubicVolume();
 	}
 
 	public function getSelection(): StackingHelper
@@ -73,15 +76,19 @@ class StackTask extends SelectionEditTask
 		$startZ = $start->z;
 		if ($this->insert) {
 			$ignore = HeightMapCache::getIgnore();
-			yield from $this->getSelection()->asShapeConstructors(function (int $x, int $y, int $z) use ($ignore, $handler, $sizeX, $sizeY, $sizeZ, $startX, $startY, $startZ): void {
-				$block = $handler->getBlock($startX + (($x - $startX) % $sizeX + $sizeX) % $sizeX, $startY + (($y - $startY) % $sizeY + $sizeY) % $sizeY, $startZ + (($z - $startZ) % $sizeZ + $sizeZ) % $sizeZ);
+			yield from $this->getSelection()->asShapeConstructors(function (int $x, int $y, int $z, ?BlockVector $regionStart = null, ?BlockOffsetVector $regionSize = null) use ($ignore, $handler, $sizeX, $sizeY, $sizeZ, $startX, $startY, $startZ): void {
+				$regionStart ??= new BlockVector($startX, $startY, $startZ);
+				$regionSize ??= new BlockOffsetVector($sizeX, $sizeY, $sizeZ);
+				$block = $handler->getBlock($regionStart->x + (($x - $regionStart->x) % $regionSize->x + $regionSize->x) % $regionSize->x, $regionStart->y + (($y - $regionStart->y) % $regionSize->y + $regionSize->y) % $regionSize->y, $regionStart->z + (($z - $regionStart->z) % $regionSize->z + $regionSize->z) % $regionSize->z);
 				if ($block !== 0 && in_array($handler->getBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS, $ignore, true)) {
 					$handler->changeBlock($x, $y, $z, $block);
 				}
 			}, $this->context);
 		} else {
-			yield from $this->getSelection()->asShapeConstructors(function (int $x, int $y, int $z) use ($handler, $sizeX, $sizeY, $sizeZ, $startX, $startY, $startZ): void {
-				$handler->copyBlock($x, $y, $z, $startX + (($x - $startX) % $sizeX + $sizeX) % $sizeX, $startY + (($y - $startY) % $sizeY + $sizeY) % $sizeY, $startZ + (($z - $startZ) % $sizeZ + $sizeZ) % $sizeZ);
+			yield from $this->getSelection()->asShapeConstructors(function (int $x, int $y, int $z, ?BlockVector $regionStart = null, ?BlockOffsetVector $regionSize = null) use ($handler, $sizeX, $sizeY, $sizeZ, $startX, $startY, $startZ): void {
+				$regionStart ??= new BlockVector($startX, $startY, $startZ);
+				$regionSize ??= new BlockOffsetVector($sizeX, $sizeY, $sizeZ);
+				$handler->copyBlock($x, $y, $z, $regionStart->x + (($x - $regionStart->x) % $regionSize->x + $regionSize->x) % $regionSize->x, $regionStart->y + (($y - $regionStart->y) % $regionSize->y + $regionSize->y) % $regionSize->y, $regionStart->z + (($z - $regionStart->z) % $regionSize->z + $regionSize->z) % $regionSize->z);
 			}, $this->context);
 		}
 	}
@@ -91,13 +98,17 @@ class StackTask extends SelectionEditTask
 	 */
 	public function getChunkHandler(): GroupedChunkHandler
 	{
-		if ($this->getSelection()->getAxis() === Axis::Y) {
+		$selection = $this->getSelection();
+		if ($this->original instanceof Cube && count($this->original->getRegions()) > 1) {
 			return new SingleChunkHandler($this->getTargetWorld());
 		}
-		if ($this->getSelection()->isCopying()) {
+		if ($selection->getAxis() === Axis::Y) {
+			return new SingleChunkHandler($this->getTargetWorld());
+		}
+		if ($selection->isCopying()) {
 			return new CopyingStackingChunkHandler($this->getTargetWorld(), $this->original, $this->getSelection()->getAxis());
 		}
-		return new SimpleStackingChunkHandler($this->getTargetWorld(), $this->original, $this->getSelection()->getAxis());
+		return new SimpleStackingChunkHandler($this->getTargetWorld(), $this->original, $selection->getAxis());
 	}
 
 	protected function sortChunks(array $chunks): array

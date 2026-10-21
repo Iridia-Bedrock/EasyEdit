@@ -70,6 +70,11 @@ abstract class Selection implements SelectionIdentifier
 		return $this->getPos2()->diff($this->getPos1())->cubicSize();
 	}
 
+	public function getVolume(): int
+	{
+		return $this->getSize()->volume();
+	}
+
 	/**
 	 * @return BlockVector
 	 */

@@ -30,7 +30,7 @@ class CopyTask extends SelectionEditTask
 
 	public function calculateEffectiveComplexity(): int
 	{
-		return (int) ceil($this->getSelection()->getSize()->volume() / 2);
+		return (int) ceil($this->getSelection()->getVolume() / 2);
 	}
 
 	protected function toTaskResult(): EditTaskResult

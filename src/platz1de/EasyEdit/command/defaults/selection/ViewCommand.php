@@ -8,8 +8,6 @@ use platz1de\EasyEdit\command\flags\CommandFlag;
 use platz1de\EasyEdit\command\flags\CommandFlagCollection;
 use platz1de\EasyEdit\command\KnownPermissions;
 use platz1de\EasyEdit\session\Session;
-use platz1de\EasyEdit\world\clientblock\ClientSideBlockManager;
-use platz1de\EasyEdit\world\clientblock\StructureBlockWindow;
 
 class ViewCommand extends EasyEditCommand
 {
@@ -24,9 +22,8 @@ class ViewCommand extends EasyEditCommand
 	 */
 	public function process(Session $session, CommandFlagCollection $flags): void
 	{
-		$selection = $session->getCube();
-
-		ClientSideBlockManager::registerBlock($session->getPlayer(), new StructureBlockWindow($session->asPlayer(), $selection->getPos1(), $selection->getPos2()));
+		$session->getCube();
+		$session->updateSelectionHighlight();
 	}
 
 	/**

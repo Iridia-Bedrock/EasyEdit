@@ -19,6 +19,7 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemUseEvent;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\player\PlayerDropItemEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\item\Axe;
@@ -41,6 +42,16 @@ class DefaultEventListener implements Listener
 	private static array $cooldown = [];
 	private const CREATIVE_REACH = 5;
 
+	public function onDrop(PlayerDropItemEvent $event): void
+	{
+		$player = $event->getPlayer();
+		$item = $event->getItem();
+		if ($player->isSneaking() && $item instanceof Axe && $item->getTier() === ToolTier::WOOD() && $item->getNamedTag()->getByte("isEasyEditWand", 0) === 1 && $player->hasPermission(KnownPermissions::PERMISSION_SELECT)) {
+			$event->cancel();
+			SessionManager::get($player)->deselect();
+		}
+	}
+
 	/**
 	 * @param BlockBreakEvent $event
 	 */
@@ -49,7 +60,7 @@ class DefaultEventListener implements Listener
 		$axe = $event->getItem();
 		if ($axe instanceof Axe && $axe->getTier() === ToolTier::WOOD() && $event->getPlayer()->isCreative() && $event->getPlayer()->hasPermission(KnownPermissions::PERMISSION_SELECT)) {
 			$event->cancel();
-			SessionManager::get($event->getPlayer())->selectPos1($event->getBlock()->getPosition());
+			SessionManager::get($event->getPlayer())->selectPos1($event->getBlock()->getPosition(), $event->getPlayer()->isSneaking());
 		} elseif ($axe instanceof Stick && $axe->getNamedTag()->getByte("isInfoStick", 0) === 1) {
 			$event->cancel();
 			BlockInfoTool::display(SessionManager::get($event->getPlayer()), $event->getBlock());
