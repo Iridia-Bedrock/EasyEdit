@@ -111,6 +111,22 @@ class Cube extends Selection
 	public function getVolume(): int
 	{
 		$regions = $this->getRegions();
+		$disjoint = true;
+		for ($i = 0; $i < count($regions) && $disjoint; ++$i) {
+			for ($j = $i + 1; $j < count($regions); ++$j) {
+				[$aMin, $aMax] = $regions[$i];
+				[$bMin, $bMax] = $regions[$j];
+				if ($aMin->x <= $bMax->x && $aMax->x >= $bMin->x && $aMin->y <= $bMax->y && $aMax->y >= $bMin->y && $aMin->z <= $bMax->z && $aMax->z >= $bMin->z) {
+					$disjoint = false;
+					break;
+				}
+			}
+		}
+		if ($disjoint) {
+			$volume = 0;
+			foreach ($regions as [$min, $max]) $volume += $max->diff($min)->cubicSize()->volume();
+			return $volume;
+		}
 		$xEdges = [];
 		foreach ($regions as [$min, $max]) {
 			$xEdges[] = $min->x;
