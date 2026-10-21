@@ -20,6 +20,7 @@ use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemUseEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerDropItemEvent;
+use pocketmine\event\player\PlayerMissSwingEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\item\Axe;
@@ -68,6 +69,34 @@ class DefaultEventListener implements Listener
 		}
 
 		self::$cooldown[$event->getPlayer()->getUniqueId()->getBytes()] = microtime(true) + ConfigManager::getToolCooldown();
+	}
+
+	public function onMissSwing(PlayerMissSwingEvent $event): void
+	{
+		$player = $event->getPlayer();
+		$item = $player->getInventory()->getItemInHand();
+		if (!$item instanceof Axe || $item->getTier() !== ToolTier::WOOD() || !$player->isCreative() || !$player->hasPermission(KnownPermissions::PERMISSION_SELECT)) {
+			return;
+		}
+
+		$event->cancel();
+		$uuid = $player->getUniqueId()->getBytes();
+		if ((self::$cooldown[$uuid] ?? .0) >= microtime(true)) {
+			return;
+		}
+
+		try {
+			$target = $player->getTargetBlock(100, [BlockTypeIds::WATER => true, BlockTypeIds::LAVA => true, BlockTypeIds::AIR => true]);
+		} catch (Throwable) {
+			//No idea why this is crashing for some users, probably caused by weird binaries / plugins
+			FastAsyncWorldEdit::getInstance()->getLogger()->warning("Player " . $player->getName() . " has thrown an exception while trying to get a target block");
+			return;
+		}
+
+		if ($target instanceof Block) {
+			self::$cooldown[$uuid] = microtime(true) + ConfigManager::getToolCooldown();
+			SessionManager::get($player)->selectPos1($target->getPosition(), $player->isSneaking());
+		}
 	}
 
 	/**
