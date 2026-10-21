@@ -1,5 +1,5 @@
 {
-    "name": "iridia-bedrock/easyedit",
+    "name": "iridia-bedrock/fastasyncworldedit",
     "autoload": {
         "psr-4": {
             "platz1de\\EasyEdit\\": "src/platz1de/EasyEdit/"
