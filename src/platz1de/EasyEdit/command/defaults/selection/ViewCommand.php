@@ -22,7 +22,7 @@ class ViewCommand extends EasyEditCommand
 	 */
 	public function process(Session $session, CommandFlagCollection $flags): void
 	{
-		$session->getCube();
+		$session->getSelection();
 		$session->updateSelectionHighlight();
 	}
 

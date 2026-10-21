@@ -1,7 +1,7 @@
 #English language file
 #Author: platz1de (FAWE Style)
 #Last updated at: 2024-03-05
-message-version: "3.0.2"
+message-version: "3.0.5"
 
 #If you want to include double quotes (") in your messages please escape them with a backslash (\")
 
@@ -15,6 +15,10 @@ selected-pos2: "Second position set to ({x}, {y}, {z}). You now have {regions} s
 additional-selection-started: "Additional region started at ({x}, {y}, {z}). Right-click a block to finish it."
 wand-given: "§aWooden Axe equipped. §7Left-click: corner 1 · right-click: corner 2 · sneak + left-click: add a region · sneak + drop: clear selection."
 deselected: "All selected regions cleared."
+selection-adjusted: "Adjusted {regions} selected region(s)."
+chunk-selected: "Selected {regions} chunk(s)."
+selection-type-set: "Selection mode set to {type}. Left-click to start, then right-click to define or extend the selection."
+selection-point-added: "Selection point {points} added at ({x}, {y}, {z}). Poly needs at least three non-collinear points; convex needs at least four points that are not coplanar."
 
 no-selection: "Select one or more regions first."
 no-clipboard: "Your clipboard is empty. Copy something first."
@@ -84,14 +88,36 @@ command-pos1-description: "Set the first corner of the current region"
 command-pos1-usage: "//pos1 [x] [y] [z]"
 command-pos2-description: "Set the second corner of the current region"
 command-pos2-usage: "//pos2 [x] [y] [z]"
+command-hpos1-description: "Set the first selection point at the block you're looking at"
+command-hpos1-usage: "//hpos1"
+command-hpos2-description: "Set the second selection point at the block you're looking at"
+command-hpos2-usage: "//hpos2"
 command-deselect-description: "Clear all selected regions"
 command-deselect-usage: "//deselect"
+command-sel-description: "Clear the selection or choose a selection shape"
+command-sel-usage: "//sel [cuboid|extend|sphere|ellipsoid|cylinder|poly|convex]"
+command-chunk-description: "Select the chunk or chunks containing the target coordinates or selection"
+command-chunk-usage:
+  - "//chunk - Select the chunk you are standing in"
+  - "//chunk <x> <y> <z> - Select the chunk containing these block coordinates"
+  - "//chunk -c <chunk-x> <chunk-z> - Select a chunk by chunk coordinates"
+  - "//chunk -s - Select every chunk intersecting your current selection"
 command-extend-description: "Extend every selected region"
 command-extend-usage:
   - "//extend [direction] [count]"
   - "//extend [count] - Extend every selected region into your looking direction"
   - "//extend vertical - Fully extend every selected region vertically"
   - "//extend --min <x>,<y>,<z> --max <x>,<y>,<z> - Modify every selected region by the given vectors"
+command-shift-description: "Move every selected region without moving its blocks"
+command-shift-usage: "//shift <amount> [direction]"
+command-expand-description: "Expand every selected region toward a direction"
+command-expand-usage: "//expand <amount> [reverse-amount] [direction] | //expand vert"
+command-contract-description: "Contract every selected region toward a direction"
+command-contract-usage: "//contract <amount> [reverse-amount] [direction]"
+command-inset-description: "Contract every selected region on all sides"
+command-inset-usage: "//inset [-h] [-v] <amount>"
+command-outset-description: "Expand every selected region on all sides"
+command-outset-usage: "//outset [-h] [-v] <amount>"
 command-set-description: "Set blocks in every selected region"
 command-set-usage: "//set <pattern>"
 command-replace-description: "Replace blocks in every selected region"
