@@ -34,9 +34,9 @@ class LinearSelection extends Selection
 	{
 		$chunks = [];
 		foreach (VoxelRayTrace::betweenPoints($this->pos1->toVector()->add(0.5, 0.5, 0.5)->divide(16), $this->pos2->toVector()->add(0.5, 0.5, 0.5)->divide(16)) as $pos) {
-			$chunks[] = World::chunkHash((int) $pos->x, (int) $pos->z);
+			$chunks[World::chunkHash((int) $pos->x, (int) $pos->z)] = true;
 		}
-		return array_unique($chunks); //absolutely no idea how this can even happen, but it does
+		return array_keys($chunks);
 	}
 
 	public function asShapeConstructors(Closure $closure, SelectionContext $context): Generator

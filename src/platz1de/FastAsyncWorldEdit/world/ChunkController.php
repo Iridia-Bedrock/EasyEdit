@@ -38,9 +38,11 @@ class ChunkController
 	 */
 	public function moveTo(int $x, int $y, int $z): bool
 	{
-		if ($this->currentX !== $x >> 4 || $this->currentZ !== $z >> 4) {
-			$this->currentX = $x >> 4;
-			$this->currentZ = $z >> 4;
+		$chunkX = $x >> 4;
+		$chunkZ = $z >> 4;
+		if ($this->currentX !== $chunkX || $this->currentZ !== $chunkZ) {
+			$this->currentX = $chunkX;
+			$this->currentZ = $chunkZ;
 
 			$this->currentY = (World::Y_MIN >> 4) - 1; //invalidate
 
@@ -48,8 +50,9 @@ class ChunkController
 			$this->currentChunk->use();
 		}
 
-		if ($this->currentY !== $y >> 4) {
-			$this->currentY = $y >> 4;
+		$subChunkY = $y >> 4;
+		if ($this->currentY !== $subChunkY) {
+			$this->currentY = $subChunkY;
 
 			$this->currentSubChunk = $this->currentChunk->getChunk()->getSubChunk($y >> 4);
 			return true;
@@ -74,7 +77,8 @@ class ChunkController
 	public function getBlock(int $x, int $y, int $z): int
 	{
 		$this->readCount++;
-		$y = min(World::Y_MAX - 1, max(World::Y_MIN, $y));
+		if ($y < World::Y_MIN) $y = World::Y_MIN;
+		elseif ($y >= World::Y_MAX) $y = World::Y_MAX - 1;
 		$this->moveTo($x, $y, $z);
 		return $this->currentSubChunk->getBlockStateId($x & 0x0f, $y & 0x0f, $z & 0x0f);
 	}
@@ -100,7 +104,8 @@ class ChunkController
 	public function setBlock(int $x, int $y, int $z, int $block): void
 	{
 		$this->writeCount++;
-		$y = min(World::Y_MAX - 1, max(World::Y_MIN, $y));
+		if ($y < World::Y_MIN) $y = World::Y_MIN;
+		elseif ($y >= World::Y_MAX) $y = World::Y_MAX - 1;
 		$this->moveTo($x, $y, $z);
 		//Note: this will break if air blocks ever become their id of 0 back again.
 		$this->currentSubChunk->setBlockStateId($x & 0x0f, $y & 0x0f, $z & 0x0f, $block);

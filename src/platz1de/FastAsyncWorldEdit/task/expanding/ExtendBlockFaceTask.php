@@ -34,10 +34,8 @@ class ExtendBlockFaceTask extends ExpandingTask
 	{
 		$target = $handler->getBlock($this->start->x, $this->start->y, $this->start->z);
 		$offset = $this->start->diff($start = $this->start->getSide($this->face));
-		$ignore = HeightMapCache::getIgnore();
-		if (($k = array_search($target, $ignore, true)) !== false) {
-			unset($ignore[$k]);
-		}
+		$ignore = HeightMapCache::getIgnoreLookup();
+		unset($ignore[$target >> Block::INTERNAL_STATE_DATA_BITS]);
 
 		$queue = new SplPriorityQueue();
 		$scheduled = [];
@@ -62,7 +60,7 @@ class ExtendBlockFaceTask extends ExpandingTask
 			$this->updateProgress(-$current["priority"], $limit);
 			$loader->checkRuntimeChunk($chunk);
 			$loader->checkRuntimeChunk($c);
-			if ($handler->getBlock($x + $offsetX, $y + $offsetY, $z + $offsetZ) !== $target || !in_array($handler->getResultingBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS, $ignore, true)) {
+			if ($handler->getBlock($x + $offsetX, $y + $offsetY, $z + $offsetZ) !== $target || !isset($ignore[$handler->getResultingBlock($x, $y, $z) >> Block::INTERNAL_STATE_DATA_BITS])) {
 				$loader->checkUnload($handler, $chunk);
 				$loader->checkUnload($handler, $c);
 				continue;

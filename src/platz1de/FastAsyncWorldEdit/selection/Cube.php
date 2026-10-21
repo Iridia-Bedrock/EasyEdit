@@ -186,7 +186,17 @@ class Cube extends Selection
 		$previousRegions = [];
 		foreach ($this->getRegions() as [$start, $end]) {
 			$region = new self($this->world, $start, $end);
-			$covered = $previousRegions;
+			$covered = [];
+			foreach ($previousRegions as [$previousStart, $previousEnd]) {
+				if ($previousStart->x <= $end->x && $previousEnd->x >= $start->x && $previousStart->y <= $end->y && $previousEnd->y >= $start->y && $previousStart->z <= $end->z && $previousEnd->z >= $start->z) {
+					$covered[] = [$previousStart, $previousEnd];
+				}
+			}
+			if ($covered === []) {
+				yield from $region->asSingleShapeConstructors($closure, $context);
+				$previousRegions[] = [$start, $end];
+				continue;
+			}
 			$regionClosure = static function (int $x, int $y, int $z) use ($closure, $covered): void {
 				foreach ($covered as [$min, $max]) {
 					if ($min->x <= $x && $x <= $max->x && $min->y <= $y && $y <= $max->y && $min->z <= $z && $z <= $max->z) {
@@ -233,11 +243,11 @@ class Cube extends Selection
 		foreach ($this->getRegions() as [$start, $end]) {
 			for ($x = $start->x >> 4; $x <= $end->x >> 4; ++$x) {
 				for ($z = $start->z >> 4; $z <= $end->z >> 4; ++$z) {
-					$chunks[] = World::chunkHash($x, $z);
+					$chunks[World::chunkHash($x, $z)] = true;
 				}
 			}
 		}
-		return array_values(array_unique($chunks));
+		return array_keys($chunks);
 	}
 
 	public function __serialize(): array
