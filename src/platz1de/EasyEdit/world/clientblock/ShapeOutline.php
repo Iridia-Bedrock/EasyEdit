@@ -7,7 +7,6 @@ use platz1de\EasyEdit\selection\ConvexPolyhedron;
 use platz1de\EasyEdit\selection\Ellipsoid;
 use platz1de\EasyEdit\selection\Polygon;
 use platz1de\EasyEdit\selection\Selection;
-use platz1de\EasyEdit\selection\SelectionContext;
 use platz1de\EasyEdit\selection\Sphere;
 use platz1de\EasyEdit\utils\PacketUtils;
 use platz1de\EasyEdit\world\ReferencedWorldHolder;
@@ -60,19 +59,8 @@ class ShapeOutline extends ClientSideBlock
 			$this->buildConvexPoints($selection, $sampleEvery);
 			return;
 		}
-		if (!$selection instanceof Sphere && !$selection instanceof Cylinder) return;
-
-		$count = 0;
-		$add = function (int $x, int $y, int $z) use (&$count, $sampleEvery): void {
-			if (($count++ % $sampleEvery) === 0) {
-				$this->points["$x:$y:$z"] = new Vector3($x, $y, $z);
-			}
-		};
-		foreach ($selection->asShapeConstructors($add, SelectionContext::hollow()) as $constructor) {
-			foreach ($selection->getNeededChunks() as $chunk) {
-				if ($constructor->needsChunk($chunk)) $constructor->moveTo($chunk);
-			}
-		}
+		if ($selection instanceof Sphere) $this->buildSpherePoints($selection);
+		elseif ($selection instanceof Cylinder) $this->buildCylinderPoints($selection);
 	}
 
 	private function buildPolygonPoints(Polygon $selection, int $sampleEvery): void
@@ -82,40 +70,105 @@ class ShapeOutline extends ClientSideBlock
 		if ($count < 3) return;
 		$minY = $selection->getPos1()->y;
 		$maxY = $selection->getPos2()->y;
-		$visited = 0;
 		for ($i = 0; $i < $count; ++$i) {
 			$a = $vertices[$i];
 			$b = $vertices[($i + 1) % $count];
 			$edgeSteps = max(1, max(abs($b->x - $a->x), abs($b->z - $a->z)));
-			for ($step = 0; $step <= $edgeSteps; ++$step) {
-				if (($visited++ % $sampleEvery) !== 0) continue;
+			for ($step = 0; $step <= $edgeSteps; $step += $sampleEvery) {
 				$t = $step / $edgeSteps;
 				$x = (int) round($a->x + ($b->x - $a->x) * $t);
 				$z = (int) round($a->z + ($b->z - $a->z) * $t);
 				$this->points["$x:$minY:$z"] = new Vector3($x, $minY, $z);
 				$this->points["$x:$maxY:$z"] = new Vector3($x, $maxY, $z);
 			}
-			for ($y = $minY; $y <= $maxY; ++$y) {
-				if (($visited++ % $sampleEvery) !== 0) continue;
+			if ($edgeSteps % $sampleEvery !== 0) {
+				$x = (int) round($b->x);
+				$z = (int) round($b->z);
+				$this->points["$x:$minY:$z"] = new Vector3($x, $minY, $z);
+				$this->points["$x:$maxY:$z"] = new Vector3($x, $maxY, $z);
+			}
+			for ($y = $minY; $y <= $maxY; $y += $sampleEvery) {
 				$this->points[$a->x . ":" . $y . ":" . $a->z] = new Vector3($a->x, $y, $a->z);
+			}
+			if (($maxY - $minY) % $sampleEvery !== 0) {
+				$this->points[$a->x . ":" . $maxY . ":" . $a->z] = new Vector3($a->x, $maxY, $a->z);
 			}
 		}
 	}
 
 	private function buildConvexPoints(ConvexPolyhedron $selection, int $sampleEvery): void
 	{
-		$visited = 0;
 		foreach ($selection->getHullEdges() as [$a, $b]) {
 			$steps = max(1, max(abs($b->x - $a->x), abs($b->y - $a->y), abs($b->z - $a->z)));
-			for ($step = 0; $step <= $steps; ++$step) {
-				if (($visited++ % $sampleEvery) !== 0) continue;
+			for ($step = 0; $step <= $steps; $step += $sampleEvery) {
 				$t = $step / $steps;
 				$x = (int) round($a->x + ($b->x - $a->x) * $t);
 				$y = (int) round($a->y + ($b->y - $a->y) * $t);
 				$z = (int) round($a->z + ($b->z - $a->z) * $t);
 				$this->points["$x:$y:$z"] = new Vector3($x, $y, $z);
 			}
+			if ($steps % $sampleEvery !== 0) {
+				$this->points[$b->x . ":" . $b->y . ":" . $b->z] = new Vector3($b->x, $b->y, $b->z);
+			}
 		}
+	}
+
+	private function buildSpherePoints(Sphere $selection): void
+	{
+		$center = $selection->getPoint();
+		$radius = max(0.0, $selection->getRadius());
+		$steps = max(8, min(64, (int) ceil($radius * 2)));
+		$segments = $steps * 2;
+		for ($ring = 0; $ring <= $steps; ++$ring) {
+			$theta = M_PI * $ring / $steps;
+			for ($segment = 0; $segment < $segments; ++$segment) {
+				$phi = 2 * M_PI * $segment / $segments;
+				$this->addPoint(
+					(int) round($center->x + $radius * sin($theta) * cos($phi)),
+					(int) round($center->y + $radius * cos($theta)),
+					(int) round($center->z + $radius * sin($theta) * sin($phi))
+				);
+			}
+		}
+		for ($rail = 0; $rail < 8; ++$rail) {
+			$phi = 2 * M_PI * $rail / 8;
+			for ($step = 0; $step <= $steps; ++$step) {
+				$theta = M_PI * $step / $steps;
+				$this->addPoint(
+					(int) round($center->x + $radius * sin($theta) * cos($phi)),
+					(int) round($center->y + $radius * cos($theta)),
+					(int) round($center->z + $radius * sin($theta) * sin($phi))
+				);
+			}
+		}
+	}
+
+	private function buildCylinderPoints(Cylinder $selection): void
+	{
+		$center = $selection->getPoint();
+		$radius = max(0.0, $selection->getRadius());
+		$height = max(1, $selection->getHeight());
+		$segments = max(8, min(512, (int) ceil($radius * 2)));
+		$minY = (int) floor($center->y);
+		$maxY = $minY + $height - 1;
+		for ($segment = 0; $segment < $segments; ++$segment) {
+			$angle = 2 * M_PI * $segment / $segments;
+			$x = (int) round($center->x + $radius * cos($angle));
+			$z = (int) round($center->z + $radius * sin($angle));
+			$this->addPoint($x, $minY, $z);
+			$this->addPoint($x, $maxY, $z);
+		}
+		for ($rail = 0; $rail < 16; ++$rail) {
+			$angle = 2 * M_PI * $rail / 16;
+			$x = (int) round($center->x + $radius * cos($angle));
+			$z = (int) round($center->z + $radius * sin($angle));
+			for ($y = $minY; $y <= $maxY; ++$y) $this->addPoint($x, $y, $z);
+		}
+	}
+
+	private function addPoint(int $x, int $y, int $z): void
+	{
+		$this->points["$x:$y:$z"] = new Vector3($x, $y, $z);
 	}
 
 	private function buildEllipsoidPoints(Ellipsoid $selection, int $sampleEvery): void
