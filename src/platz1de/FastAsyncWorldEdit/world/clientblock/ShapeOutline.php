@@ -220,6 +220,19 @@ class ShapeOutline extends ClientSideBlock
 		$this->send($player);
 	}
 
+	public function resendChunk(Player $player, int $chunkX, int $chunkZ): void
+	{
+		if ($player->getWorld()->getFolderName() !== $this->getWorldName()) return;
+		$chunk = World::chunkHash($chunkX, $chunkZ);
+		if (!$player->isUsingChunk($chunkX, $chunkZ)) return;
+		foreach ($this->pointsByChunk[$chunk] ?? [] as $position) {
+			PacketUtils::sendFakeBlockAt($player, $position, VanillaBlocks::GLASS());
+		}
+		if (isset($this->pointsByChunk[$chunk])) {
+			$this->sentChunks[$chunk] = true;
+		}
+	}
+
 	public function update(Player $player): void
 	{
 		if ($player->getWorld()->getFolderName() !== $this->getWorldName()) return;

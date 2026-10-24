@@ -3,6 +3,7 @@
 namespace platz1de\FastAsyncWorldEdit\listener;
 
 use platz1de\FastAsyncWorldEdit\utils\PacketUtils;
+use platz1de\FastAsyncWorldEdit\world\clientblock\ClientSideBlockManager;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerPostChunkSendEvent;
@@ -37,6 +38,7 @@ class ChunkRefreshListener implements Listener
 			PacketUtils::sendFakeBlockAt($player, new Vector3($event->getChunkX() << 4, (int) $player->getPosition()->getY(), $event->getChunkZ() << 4), VanillaBlocks::GOLD());
 			PacketUtils::resendBlock(new Vector3($event->getChunkX() << 4, (int) $player->getPosition()->getY(), $event->getChunkZ() << 4), $player->getWorld(), $player);
 		}
+		ClientSideBlockManager::resendChunk($player, $event->getChunkX(), $event->getChunkZ());
 	}
 
 	/**

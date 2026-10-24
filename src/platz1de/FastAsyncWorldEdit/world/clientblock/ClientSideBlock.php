@@ -23,6 +23,8 @@ abstract class ClientSideBlock
 
 	abstract public function update(Player $player): void;
 
+	public function resendChunk(Player $player, int $chunkX, int $chunkZ): void {}
+
 	/**
 	 * @return int
 	 */

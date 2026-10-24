@@ -52,7 +52,7 @@ class LoaderManager
 	}
 
 	/**
-	 * Implementation of World::setChunk without loading unnecessary Chunks which get overwritten anyways
+	 * Installs edited chunk data, using subchunk injections when available to avoid full chunk resends
 	 * @param World            $world
 	 * @param int              $x
 	 * @param int              $z
@@ -78,28 +78,37 @@ class LoaderManager
 
 		$chunk->setTerrainDirty();
 
-		(function () use ($preparedInjections, $z, $x, $chunkHash, $chunk): void {
-			$this->chunks[$chunkHash] = $chunk;
+		if ($preparedInjections === []) {
+			// Async edits return complete chunks. Use PocketMine's normal replacement path so
+			// chunk state, listeners and persistence bookkeeping stay in sync.
+			$world->setChunk($x, $z, $chunk);
+			// setChunk() can transfer compatible tile instances from the old chunk. The
+			// ChunkInformation tile data below is authoritative, so recreate those instead.
+			foreach ($chunk->getTiles() as $tile) {
+				$tile->close();
+			}
+			foreach ($world->getChunkPlayers($x, $z) as $player) {
+				ChunkRefreshListener::getInstance()->addAffectedPlayer($player->getName());
+			}
+		} else {
+			// Small main-thread edits use subchunk packets to avoid resending full chunks.
+			(function () use ($preparedInjections, $z, $x, $chunkHash, $chunk): void {
+				$this->chunks[$chunkHash] = $chunk;
 
-			unset($this->blockCache[$chunkHash], $this->changedBlocks[$chunkHash]);
+				unset($this->blockCache[$chunkHash], $this->changedBlocks[$chunkHash]);
 
-			foreach ($this->getChunkListeners($x, $z) as $loader) {
-				//In 1.16 Mojang really ruined Chunk updates, normal block rendering is delayed by about 1-5 seconds
-				if ($loader instanceof Player) {
-					if ($preparedInjections !== []) {
+				foreach ($this->getChunkListeners($x, $z) as $loader) {
+					if ($loader instanceof Player) {
 						foreach ($preparedInjections as $injection) {
 							//Hack to allow instant, flicker-free block setting, costly network wise
 							$loader->getNetworkSession()->sendDataPacket(UpdateSubChunkBlocksInjector::create($injection));
 						}
 					} else {
 						$loader->onChunkChanged($x, $z, $chunk);
-						ChunkRefreshListener::getInstance()->addAffectedPlayer($loader->getName());
 					}
-				} else {
-					$loader->onChunkChanged($x, $z, $chunk);
 				}
-			}
-		})->call($world);
+			})->call($world);
+		}
 
 		foreach ($chunkInformation->getTiles() as $rawTile) {
 			$tile = TileFactory::getInstance()->createFromData($world, $rawTile);

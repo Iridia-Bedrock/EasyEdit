@@ -50,6 +50,13 @@ class ClientSideBlockManager
 		}
 	}
 
+	public static function resendChunk(Player $player, int $chunkX, int $chunkZ): void
+	{
+		foreach (self::$blocks[$player->getName()] ?? [] as $block) {
+			$block->resendChunk($player, $chunkX, $chunkZ);
+		}
+	}
+
 	/**
 	 * Should be called when a player does anything that could change the block
 	 * @param Player $player

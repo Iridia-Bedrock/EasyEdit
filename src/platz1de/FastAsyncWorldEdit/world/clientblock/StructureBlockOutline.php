@@ -45,6 +45,13 @@ class StructureBlockOutline extends ClientSideBlock
 		}
 	}
 
+	public function resendChunk(Player $player, int $chunkX, int $chunkZ): void
+	{
+		if ($this->getWorldName() === $player->getWorld()->getFolderName() && ($this->block->getPosition()->getFloorX() >> 4) === $chunkX && ($this->block->getPosition()->getFloorZ() >> 4) === $chunkZ) {
+			$this->send($player);
+		}
+	}
+
 	public function update(Player $player): void
 	{
 		if ($this->getWorldName() === $player->getWorld()->getFolderName() && !$player->isUsingChunk($this->block->getPosition()->getX() >> 4, $this->block->getPosition()->getZ() >> 4)) {
